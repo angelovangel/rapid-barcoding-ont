@@ -13,14 +13,14 @@ barcodes <- str_c('barcode', formatC(1:96, width = 2, flag = '0'))
 # creates base empty dataframe to view and fill later
 make_dest <- function() {
     dest <- tibble(well = wells_colwise, 
-                   sample_name = NA, 
-                   barcode = NA, dna_size = NA, conc = NA, fmoles = NA, ul = NA)
+                   sample = NA, 
+                   barcode = NA, dna_size = NA, conc = NA, fmoles = NA, ul = NA, bc_count = NA, mycolor = NA)
     dest
 }
 
 example_table <- make_dest()
 #example_table$source_well = factor(x = c('A1', 'B1', 'C1', rep(NA, 93)), levels = wells_colwise),
-example_table$sample_name = c('sample1', 'sample2', 'sample3', rep(NA, 93))
+example_table$sample = c('sample1', 'sample2', 'sample3', rep(NA, 93))
 example_table$barcode = factor(c('barcode01', 'barcode02', 'barcode03', rep(NA, 93)), levels = barcodes)
 example_table$dna_size = c(10000, 20000, 20000, rep(NA, 93))
 example_table$conc = c(12, 10, 3.5, rep(NA, 93))
@@ -53,19 +53,24 @@ ui <- dashboardPage(
 
 # server #
 server = function(input, output, session) {
+  
     hot <- reactive({
       if(!is.null(input$hot)) {
-      as.tibble(hot_to_r(input$hot)) %>%
-        mutate(fmoles = input$ng/((dna_size*617.96) + 36.04) * 1000000) %>%
-        mutate(ul = input$ng/conc)
+          as_tibble(hot_to_r(input$hot)) %>%
+          mutate(fmoles = input$ng/((dna_size*617.96) + 36.04) * 1000000) %>%
+          mutate(ul = input$ng/conc) %>%
+          mutate(ul = if_else(ul > 9, 9, ul)) %>%
+          add_count(barcode, name = 'bc_count') %>% # used to track if barcodes are unique 
+          mutate(mycolor = if_else(bc_count > 1, 'orange', 'black'))
       } else {
           example_table
         }
     })
     
+    
     output$hot <- renderRHandsontable({
-      rhandsontable(hot(),
-                    stretchH  = 'all',
+      rhandsontable(hot() %>% select(-c('bc_count', 'mycolor')),
+                    stretchH  = 'all', 
                     height = 2800,
                     rowHeaders = NULL) %>%
         hot_col('well', readOnly = T) %>%
@@ -77,26 +82,38 @@ server = function(input, output, session) {
     
     plate <- reactive({
       if(!is.null(input$hot)) {
-        df <- as.tibble(hot_to_r(input$hot)) %>% 
-          mutate(sample_name = str_c(sample_name, "<br>", barcode))
+        df <- hot() %>% 
+          mutate(sample = str_c(sample, "<br>", barcode))
         
         plater::view_plate(
           #hot_to_r(input$hot) , 
           df,
-          well_ids_column = 'well', columns_to_display = c('sample_name')
+          well_ids_column = 'well', columns_to_display = c('sample')
         )
       } else {
-        plater::view_plate(example_table, well_ids_column = 'well', columns_to_display = c('sample_name'))
+        plater::view_plate(example_table, well_ids_column = 'well', columns_to_display = c('sample'))
       }
     })
     
     output$plate <- renderReactable({
-      reactable(plate()$sample_name, 
+      reactable(plate()$sample, 
                 highlight = T, wrap = F, 
-                bordered = T, compact = T, fullWidth = T, sortable = F, 
+                bordered = T, compact = T, fullWidth = T, sortable = F,
                 defaultColDef = colDef(minWidth = 50,
                   html = TRUE, 
-                  headerStyle = list(background = "#f7f7f8", fontSize = '80%'), style = list(fontSize = '80%')
+                  headerStyle = list(background = "#f7f7f8", fontSize = '80%'),
+                  # color barcodes if duplicate
+                  style = function(value) {
+                    myvalue <- str_extract(value, 'barcode.*')
+                    mydf <- hot()
+                    if(!is.na(myvalue)) {
+                      textcolor <-mydf$mycolor[match(myvalue, mydf$barcode)]
+                    } else {
+                      textcolor <- 'black'
+                    }
+                    #print(myvalue)
+                    list(color = textcolor, fontSize = '80%')
+                  }
                   )
                 )
     })
@@ -109,7 +126,8 @@ server = function(input, output, session) {
                 compact = T, fullWidth = T, sortable = F, 
                 defaultColDef = colDef(minWidth = 50,
                                        html = TRUE, 
-                                       headerStyle = list(background = "#f7f7f8", fontSize = '80%'), style = list(fontSize = '80%')
+                                       headerStyle = list(background = "#f7f7f8", fontSize = '80%'), 
+                                       style = list(fontSize = '80%')
                                        )
                 )
     })
