@@ -22,7 +22,7 @@ make_dest <- function() {
 example_table <- make_dest()
 #example_table$source_well = factor(x = c('A1', 'B1', 'C1', rep(NA, 93)), levels = wells_colwise),
 example_table$sample = c('sample1', 'sample2', 'sample3', rep(NA, 93))
-example_table$barcode = factor(c('barcode01', 'barcode02', 'barcode03', rep(NA, 93)), levels = barcodes)
+example_table$barcode = factor(c('barcode01', 'barcode02', 'barcode03', rep('', 93)), levels = barcodes)
 example_table$dna_size = c(10000, 20000, 20000, rep(NA, 93))
 example_table$conc = c(12, 10, 3.5, rep(NA, 93))
 
@@ -103,13 +103,18 @@ server = function(input, output, session) {
   myvalues <- reactive({
     volume1 <- str_replace_na(hot()$ul, '0') # replace NA with 0, gDNA
     volume2 <- str_replace_na(9 - hot()$ul, '0') # water
-    #volume3 <- # barcode
-    
+    barcode_wells <- wells_colwise[match(hot()$barcode, barcodes)] %>% str_replace_na(replacement = ' ')
+    volume3 <- rep(1, 96)[match(hot()$barcode, barcodes)] %>% str_replace_na(replacement = '0') 
+    # see this how it works
+    # rep(1, 96)[match(c('barcode03', '', '', 'barcode01'), barcodes)]
+      
       c(
       str_flatten(hot()$well, collapse = ", "),
       str_flatten(volume1, collapse = ", "),
       str_flatten(rep('A1', 96), collapse = ", "),
-      str_flatten(volume2, collapse = ", ")
+      str_flatten(volume2, collapse = ", "),
+      str_flatten(barcode_wells, collapse = ", "),
+      str_flatten(volume3, collapse = ", ")
       )
       
       
