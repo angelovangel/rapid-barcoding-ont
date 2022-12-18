@@ -25,27 +25,41 @@ example_table$barcode = factor(c('barcode01', 'barcode02', 'barcode03', rep(NA, 
 example_table$dna_size = c(10000, 20000, 20000, rep(NA, 93))
 example_table$conc = c(12, 10, 3.5, rep(NA, 93))
 
+tab1 <-  fluidRow(
+  box(width = 12, height = 2800, status = "info", solidHeader = FALSE, title = "Enter sample information and assign barcodes", collapsible = F,
+      fluidRow(
+        column(2, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
+        column(2, actionButton('protocol', 'Show protocol', width = '100%', style = 'margin-top:25px')),
+        column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:25px')),
+        column(2, actionButton('download', 'Download plate layout', width = '100%', style = 'margin-top:25px'))
+      ),
+      
+      column(4, rHandsontableOutput('hot')),
+      column(8, reactableOutput('plate'), 
+             tags$hr(),
+             tags$p("ONT rapid barcode plate"), 
+             reactableOutput('barcode_plate'))
+  )
+)
+
+tab2 <- fluidRow(
+  box(width = 12, status = "info", solidHeader = FALSE, title = "Opentrons protocol preview", collapsible = F,
+      textOutput('protocol_preview')
+      )
+)
 
 ui <- dashboardPage(
   header = dashboardHeader(title = 'Generate ONT rapid barcoding Opentrons protocol', titleWidth = 800),
   sidebar = dashboardSidebar(disable = T),
   body = dashboardBody(
-    fluidRow(
-      box(width = 12, height = 2800, status = "info", solidHeader = FALSE, title = "Enter sample information and assign barcodes", collapsible = F,
-          fluidRow(
-            column(2, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
-            column(2, actionButton('protocol', 'Show protocol', width = '100%', style = 'margin-top:25px')),
-            column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:25px')),
-            column(2, actionButton('download', 'Download plate layout', width = '100%', style = 'margin-top:25px'))
-          ),
-          
-          column(4, rHandsontableOutput('hot')),
-          column(8, reactableOutput('plate'), 
-                 tags$hr(),
-                 tags$p("ONT rapid barcode plate"), 
-                 reactableOutput('barcode_plate'))
-          )
-      )
+   tabsetPanel(
+     tabPanel(title = "Enter samples", icon = icon("vials"),
+       tab1
+     ),
+     tabPanel(title = "Protocol preview",
+       tab2
+     )
+   )
   )
 )
   
@@ -54,6 +68,7 @@ ui <- dashboardPage(
 # server #
 server = function(input, output, session) {
   
+  ### REACTIVES
     hot <- reactive({
       if(!is.null(input$hot)) {
           as_tibble(hot_to_r(input$hot)) %>%
@@ -65,19 +80,6 @@ server = function(input, output, session) {
       } else {
           example_table
         }
-    })
-    
-    
-    output$hot <- renderRHandsontable({
-      rhandsontable(hot() %>% select(-c('bc_count', 'mycolor')),
-                    stretchH  = 'all', 
-                    height = 2800,
-                    rowHeaders = NULL) %>%
-        hot_col('well', readOnly = T) %>%
-        hot_col('fmoles', readOnly = T) %>%
-        hot_col('ul', readOnly = T) %>%
-        hot_col('dna_size', format = '0') %>%
-        hot_cell(1, 3, 'test')
     })
     
     plate <- reactive({
@@ -94,6 +96,26 @@ server = function(input, output, session) {
         plater::view_plate(example_table, well_ids_column = 'well', columns_to_display = c('sample'))
       }
     })
+    
+    
+  ### OBSERVERS
+    
+    
+  ### OUTPUTS
+    
+    
+    output$hot <- renderRHandsontable({
+      rhandsontable(hot() %>% select(-c('bc_count', 'mycolor')),
+                    stretchH  = 'all', 
+                    height = 2800,
+                    rowHeaders = NULL) %>%
+        hot_col('well', readOnly = T) %>%
+        hot_col('fmoles', readOnly = T) %>%
+        hot_col('ul', readOnly = T) %>%
+        hot_col('dna_size', format = '0') %>%
+        hot_cell(1, 3, 'test')
+    })
+    
     
     output$plate <- renderReactable({
       reactable(plate()$sample, 
@@ -130,6 +152,10 @@ server = function(input, output, session) {
                                        style = list(fontSize = '80%')
                                        )
                 )
+    })
+    
+    output$protocol_preview <- renderText({
+      hot()$ul
     })
 }
   
