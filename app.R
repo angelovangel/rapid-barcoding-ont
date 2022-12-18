@@ -1,6 +1,7 @@
 library(rhandsontable)
 library(shiny)
 library(shinydashboard)
+#library(shinyalert)
 library(plater)
 library(tibble)
 library(stringr)
@@ -44,11 +45,13 @@ tab1 <-  fluidRow(
 
 tab2 <- fluidRow(
   box(width = 12, status = "info", solidHeader = FALSE, title = "Opentrons protocol preview", collapsible = F,
-      textOutput('protocol_preview')
+      verbatimTextOutput('protocol_preview')
       )
 )
 
 ui <- dashboardPage(
+  #useShinyalert(),
+  
   header = dashboardHeader(title = 'Generate ONT rapid barcoding Opentrons protocol', titleWidth = 800),
   sidebar = dashboardSidebar(disable = T),
   body = dashboardBody(
@@ -97,9 +100,29 @@ server = function(input, output, session) {
       }
     })
     
+  myvalues <- reactive({
+    volume1 <- str_replace_na(hot()$ul, '0') # replace NA with 0, gDNA
+    volume2 <- str_replace_na(9 - hot()$ul, '0') # water
+    #volume3 <- # barcode
     
+      c(
+      str_flatten(hot()$well, collapse = ", "),
+      str_flatten(volume1, collapse = ", "),
+      str_flatten(rep('A1', 96), collapse = ", "),
+      str_flatten(volume2, collapse = ", ")
+      )
+      
+      
+  }) 
   ### OBSERVERS
-    
+    observeEvent(input$deck, {
+      showModal(
+        modalDialog(title = 'Opentrons deck preview',
+                    HTML('<img src="deck.png">'),
+                    size = 'l', easyClose = T, 
+        )
+        )
+    })
     
   ### OUTPUTS
     
@@ -154,8 +177,8 @@ server = function(input, output, session) {
                 )
     })
     
-    output$protocol_preview <- renderText({
-      hot()$ul
+    output$protocol_preview <- renderPrint({
+     write(myvalues(), file = "")
     })
 }
   
