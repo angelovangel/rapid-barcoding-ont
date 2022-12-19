@@ -14,8 +14,9 @@ barcodes <- str_c('barcode', formatC(1:96, width = 2, flag = '0'))
 # creates base empty dataframe to view and fill later
 make_dest <- function() {
     dest <- tibble(well = wells_colwise, 
-                   sample = NA, 
-                   barcode = NA, dna_size = NA, conc = NA, fmoles = NA, ul = NA, bc_count = NA, mycolor = NA)
+                   sample = NA, barcode = NA, 
+                   dna_size = NA, conc = NA, fmoles = NA, 
+                   ul = NA, bc_count = NA, mycolor = NA)
     dest
 }
 
@@ -27,14 +28,18 @@ example_table$dna_size = c(10000, 20000, 20000, rep(NA, 93))
 example_table$conc = c(12, 10, 3.5, rep(NA, 93))
 
 tab1 <-  fluidRow(
-  box(width = 12, height = 2800, status = "info", solidHeader = FALSE, title = "Enter sample information and assign barcodes", collapsible = F,
+  box(width = 12, height = 2800, status = "info", solidHeader = FALSE, 
+      title = "Enter sample information and assign barcodes", collapsible = F,
       fluidRow(
-        column(2, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
-        column(2, actionButton('protocol', 'Show protocol', width = '100%', style = 'margin-top:25px')),
+        column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Volumes out of range and duplicate barcodes will be marked in red')),
+        column(3, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'plasmid')),
+        column(3, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
+        #column(2, actionButton('protocol', 'Show protocol', width = '100%', style = 'margin-top:25px')),
         column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:25px')),
-        column(2, actionButton('download', 'Download plate layout', width = '100%', style = 'margin-top:25px'))
+        column(2, downloadButton('download', 'Download Opentrons protocol', width = '100%', style = 'margin-top:25px'))
       ),
-      
+      textOutput('protocol_instructions'),
+      tags$hr(),
       column(4, rHandsontableOutput('hot')),
       column(8, reactableOutput('plate'), 
              tags$hr(),
@@ -71,13 +76,18 @@ ui <- dashboardPage(
 # server #
 server = function(input, output, session) {
   
+  ### read template
+  protocol_template <- readLines('opentrons-template.py', warn = F)
+  
   ### REACTIVES
+    protocol <- reactiveValues(bc_vol = 0, rxn_vol = 0, sample_vol = 0)
+    
     hot <- reactive({
       if(!is.null(input$hot)) {
           as_tibble(hot_to_r(input$hot)) %>%
           mutate(fmoles = input$ng/((dna_size*617.96) + 36.04) * 1000000) %>%
           mutate(ul = input$ng/conc) %>%
-          mutate(ul = if_else(ul > 9, 9, ul)) %>%
+          mutate(ul = if_else(ul > protocol$sample_vol, protocol$sample_vol, ul)) %>%
           add_count(barcode, name = 'bc_count') %>% # used to track if barcodes are unique 
           mutate(mycolor = if_else(bc_count > 1, 'orange', 'black'))
       } else {
@@ -101,24 +111,34 @@ server = function(input, output, session) {
     })
     
   myvalues <- reactive({
+    sample_wells <- wells_colwise[hot()$sample != ''] %>% str_replace_na(replacement = ' ')
     volume1 <- str_replace_na(hot()$ul, '0') # replace NA with 0, gDNA
-    volume2 <- str_replace_na(9 - hot()$ul, '0') # water
+    # water wells is always A1
+    volume2 <- str_replace_na(protocol$sample_vol - hot()$ul, '0') # water
     barcode_wells <- wells_colwise[match(hot()$barcode, barcodes)] %>% str_replace_na(replacement = ' ')
-    volume3 <- rep(1, 96)[match(hot()$barcode, barcodes)] %>% str_replace_na(replacement = '0') 
+    volume3 <- rep(protocol$bc_vol, 96)[match(hot()$barcode, barcodes)] %>% str_replace_na(replacement = '0') 
     # see this how it works
     # rep(1, 96)[match(c('barcode03', '', '', 'barcode01'), barcodes)]
       
       c(
-      str_flatten(hot()$well, collapse = ", "),
-      str_flatten(volume1, collapse = ", "),
-      str_flatten(rep('A1', 96), collapse = ", "),
-      str_flatten(volume2, collapse = ", "),
-      str_flatten(barcode_wells, collapse = ", "),
-      str_flatten(volume3, collapse = ", ")
-      )
+        str_flatten(sample_wells, collapse = "','"),  
+        str_flatten(volume1, collapse = ", "),
+        str_flatten(volume2, collapse = ", "),
+        str_flatten(barcode_wells, collapse = "','"),
+        str_flatten(volume3, collapse = ", ")
+      ) 
+  })
+      
+  myprotocol <- reactive({
+    str_replace(protocol_template, 'sourcewells1.*', paste0("sourcewells1=['", myvalues()[1], "']")) %>%
+      str_replace('volume1.*', paste0('volume1=[', myvalues()[2], ']')) %>%
+      str_replace('volume2.*', paste0('volume2=[', myvalues()[3], ']')) %>%
+      str_replace('sourcewells3.*', paste0("sourcells3=['", myvalues()[4], "']")) %>%
+      str_replace('volume3.*', paste0('volume3=[', myvalues()[5], ']'))
+    
+    })
       
       
-  }) 
   ### OBSERVERS
     observeEvent(input$deck, {
       showModal(
@@ -129,8 +149,26 @@ server = function(input, output, session) {
         )
     })
     
+    
+    observe({
+      if(input$protocol_type == 'plasmid') {
+        protocol$bc_vol <- 0.5
+        protocol$rxn_vol <- 5
+        protocol$sample_vol <- 4.5
+      } else {
+        protocol$bc_vol <- 1
+        protocol$rxn_vol <- 10
+        protocol$sample_vol <- 9
+      }
+    })
+    
   ### OUTPUTS
     
+    output$protocol_instructions <- renderText({
+      paste0('Reaction volume is ', protocol$rxn_vol, ' ul (', 
+             protocol$sample_vol, ' ul sample + ', protocol$bc_vol, 
+             ' ul barcode). Use 50 - 100 ng for gDNA and approx 20 fmoles for plasmid.')
+    })
     
     output$hot <- renderRHandsontable({
       rhandsontable(hot() %>% select(-c('bc_count', 'mycolor')),
@@ -183,8 +221,16 @@ server = function(input, output, session) {
     })
     
     output$protocol_preview <- renderPrint({
-     write(myvalues(), file = "")
+     write(myprotocol(), file = "")
     })
+    
+    output$download <- downloadHandler(
+      
+      filename = paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-ont-protocol.py'),
+      content = function(con) {
+        write(myprotocol(), con)
+      }
+    )
 }
   
   
