@@ -94,35 +94,9 @@ server = function(input, output, session) {
           example_table
         }
     })
+  
     
-<<<<<<< HEAD
-    row_highlight <- reactive({
-      
-    })
     
-    renderer <- "
-    function(instance, td, row, col, prop, value, cellProperties) {
-      Handsontable.renderers.NumericRenderer.apply(this, arguments);
-      if (value >= 9) {
-      td.style.color = 'red'
-      }
-    }
-    "
-    output$hot <- renderRHandsontable({
-      rhandsontable(hot() %>% select(-c('bc_count', 'mycolor')),
-                    stretchH  = 'all', 
-                    height = 2800,
-                    rowHeaders = NULL) %>%
-        hot_col('well', readOnly = T) %>%
-        hot_col('fmoles', readOnly = T) %>%
-        hot_col('ul', readOnly = T, renderer = renderer) %>% # highlight volumes > max
-        hot_col('dna_size', format = '0') %>%
-        hot_cell(1, 3, 'test') %>%
-        hot_validate_numeric('conc', min = 1, max = 5000, allowInvalid = T)
-    })
-    
-=======
->>>>>>> temp
     plate <- reactive({
       if(!is.null(input$hot)) {
         df <- hot() %>% 
@@ -198,6 +172,14 @@ server = function(input, output, session) {
              ' ul barcode). Use 50 - 100 ng for gDNA and approx 20 fmoles for plasmid.')
     })
     
+    renderer <- "
+    function(instance, td, row, col, prop, value, cellProperties) {
+      Handsontable.renderers.NumericRenderer.apply(this, arguments);
+      if (value >= 9) {
+      td.style.color = 'red'
+      }
+    }
+    "
     output$hot <- renderRHandsontable({
       rhandsontable(hot() %>% select(-c('bc_count', 'mycolor')),
                     stretchH  = 'all', 
@@ -205,11 +187,11 @@ server = function(input, output, session) {
                     rowHeaders = NULL) %>%
         hot_col('well', readOnly = T) %>%
         hot_col('fmoles', readOnly = T) %>%
-        hot_col('ul', readOnly = T) %>%
+        hot_col('ul', readOnly = T, renderer = renderer) %>% # highlight volumes > max
         hot_col('dna_size', format = '0') %>%
-        hot_cell(1, 3, 'test')
+        hot_cell(1, 3, 'test') %>%
+        hot_validate_numeric('conc', min = 1, max = 5000, allowInvalid = T)
     })
-    
     
     output$plate <- renderReactable({
       reactable(plate()$sample, 
