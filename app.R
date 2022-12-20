@@ -85,7 +85,8 @@ server = function(input, output, session) {
     hot <- reactive({
       if(!is.null(input$hot)) {
           as_tibble(hot_to_r(input$hot)) %>%
-          mutate(fmoles = input$ng/((dna_size*617.96) + 36.04) * 1000000) %>%
+          #mutate(fmoles = input$ng/((dna_size*617.96) + 36.04) * 1000000) %>%
+          mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
           mutate(ul = input$ng/conc) %>%
           mutate(ul = if_else(ul > protocol$sample_vol, protocol$sample_vol, ul)) %>%
           add_count(barcode, name = 'bc_count') %>% # used to track if barcodes are unique 
@@ -136,7 +137,10 @@ server = function(input, output, session) {
       str_replace('volume1=.*', paste0('volume1=[', myvalues()[2], ']')) %>%
       str_replace('volume2=.*', paste0('volume2=[', myvalues()[3], ']')) %>%
       str_replace('sourcewells3=.*', paste0("sourcewells3=['", myvalues()[4], "']")) %>%
-      str_replace('volume3=.*', paste0('volume3=[', myvalues()[5], ']'))
+      str_replace('volume3=.*', paste0('volume3=[', myvalues()[5], ']')) %>%
+      
+      str_replace('barcode_vol = .*', paste0('barcode_vol = ', protocol$bc_vol)) %>%
+      str_replace('total_rxn_vol = .*', paste0('total_rxn_vol = ', protocol$rxn_vol))
     
     })
       
@@ -175,21 +179,24 @@ server = function(input, output, session) {
     renderer <- "
     function(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.NumericRenderer.apply(this, arguments);
+      
       if (value >= 9) {
       td.style.color = 'red'
       }
     }
     "
     output$hot <- renderRHandsontable({
+      
       rhandsontable(hot() %>% select(-c('bc_count', 'mycolor')),
-                    stretchH  = 'all', 
+                    stretchH  = 'all',  
+                    #svol = 9,
                     height = 2800,
                     rowHeaders = NULL) %>%
         hot_col('well', readOnly = T) %>%
         hot_col('fmoles', readOnly = T) %>%
         hot_col('ul', readOnly = T, renderer = renderer) %>% # highlight volumes > max
         hot_col('dna_size', format = '0') %>%
-        hot_cell(1, 3, 'test') %>%
+        #hot_cell(1, 3, 'test') %>%
         hot_validate_numeric('conc', min = 1, max = 5000, allowInvalid = T)
     })
     
@@ -236,7 +243,9 @@ server = function(input, output, session) {
     
     output$download <- downloadHandler(
       
-      filename = paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-ont-protocol.py'),
+      filename = function() {
+        paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-ont-protocol.py')
+        },
       content = function(con) {
         write(myprotocol(), con)
       }
