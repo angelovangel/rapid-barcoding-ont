@@ -130,11 +130,11 @@ server = function(input, output, session) {
   })
       
   myprotocol <- reactive({
-    str_replace(protocol_template, 'sourcewells1.*', paste0("sourcewells1=['", myvalues()[1], "']")) %>%
-      str_replace('volume1.*', paste0('volume1=[', myvalues()[2], ']')) %>%
-      str_replace('volume2.*', paste0('volume2=[', myvalues()[3], ']')) %>%
-      str_replace('sourcewells3.*', paste0("sourcells3=['", myvalues()[4], "']")) %>%
-      str_replace('volume3.*', paste0('volume3=[', myvalues()[5], ']'))
+    str_replace(protocol_template, 'sourcewells1=.*', paste0("sourcewells1=['", myvalues()[1], "']")) %>%
+      str_replace('volume1=.*', paste0('volume1=[', myvalues()[2], ']')) %>%
+      str_replace('volume2=.*', paste0('volume2=[', myvalues()[3], ']')) %>%
+      str_replace('sourcewells3=.*', paste0("sourcewells3=['", myvalues()[4], "']")) %>%
+      str_replace('volume3=.*', paste0('volume3=[', myvalues()[5], ']'))
     
     })
       
