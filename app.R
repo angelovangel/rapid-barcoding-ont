@@ -31,14 +31,15 @@ tab1 <-  fluidRow(
   box(width = 12, height = 2800, status = "info", solidHeader = FALSE, 
       title = "Enter sample information and assign barcodes", collapsible = F,
       fluidRow(
-        column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Volumes out of range and duplicate barcodes will be marked in red')),
+        column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Use 50 - 100 ng for gDNA and approx 20 fmoles for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
         column(3, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'plasmid')),
+        #column(3, uiOutput('sample_amount')),
         column(3, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
         #column(2, actionButton('protocol', 'Show protocol', width = '100%', style = 'margin-top:25px')),
         column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:25px')),
         column(2, downloadButton('download', 'Download Opentrons protocol', width = '100%', style = 'margin-top:25px'))
       ),
-      textOutput('protocol_instructions'),
+      uiOutput('protocol_instructions'),
       tags$hr(),
       column(4, rHandsontableOutput('hot')),
       column(8, reactableOutput('plate'), 
@@ -80,7 +81,7 @@ server = function(input, output, session) {
   protocol_template <- readLines('opentrons-template.py', warn = F)
   
   ### REACTIVES
-    protocol <- reactiveValues(bc_vol = 0, rxn_vol = 0, sample_vol = 0)
+    protocol <- reactiveValues(bc_vol = 0, rxn_vol = 0, sample_vol = 0, total_fmoles = 0)
     
     hot <- reactive({
       if(!is.null(input$hot)) {
@@ -88,7 +89,14 @@ server = function(input, output, session) {
           #mutate(fmoles = input$ng/((dna_size*617.96) + 36.04) * 1000000) %>%
           mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
           mutate(ul = input$ng/conc) %>%
-          mutate(ul = if_else(ul > protocol$sample_vol, protocol$sample_vol, ul)) %>%
+          mutate(
+            ul = case_when(
+              ul > protocol$sample_vol ~ protocol$sample_vol,
+              ul < 0.5 ~ 0.5,
+              TRUE ~ ul
+            )
+            #ul = if_else(ul > protocol$sample_vol, protocol$sample_vol, ul)
+            ) %>%
           add_count(barcode, name = 'bc_count') %>% # used to track if barcodes are unique 
           mutate(mycolor = if_else(bc_count > 1, 'red', 'black'))
       } else {
@@ -161,26 +169,39 @@ server = function(input, output, session) {
         protocol$bc_vol <- 0.5
         protocol$rxn_vol <- 5
         protocol$sample_vol <- 4.5
+        protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
       } else {
         protocol$bc_vol <- 1
         protocol$rxn_vol <- 10
         protocol$sample_vol <- 9
+        protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
       }
     })
     
   ### OUTPUTS
+    # change to ng or fmol depending on protocol selected
+    # output$sample_amount <- renderUI({
+    #   if(input$protocol_type == 'plasmid') {
+    #     numericInput('fmol', ' fmol per reaction (~ 20)', value = 20, min = 1, max = 200, step = 1)
+    #   } else {
+    #     numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)
+    #   } 
+    # })
     
     output$protocol_instructions <- renderText({
-      paste0('Reaction volume is ', protocol$rxn_vol, ' ul (', 
+      HTML(
+      paste0('Reaction volume is <b>', protocol$rxn_vol, '</b> ul (', 
              protocol$sample_vol, ' ul sample + ', protocol$bc_vol, 
-             ' ul barcode). Use 50 - 100 ng for gDNA and approx 20 fmoles for plasmid.')
+             ' ul barcode). Minimal pipetting volume is 0.5 ul, maximum sample volume is ',
+             protocol$sample_vol, ' ul. The pool will have a total of ', round(protocol$total_fmoles, 2), ' fmoles.')
+      )
     })
     
     renderer <- "
     function(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.NumericRenderer.apply(this, arguments);
       
-      if (value >= 9) {
+      if (value >= 9 || value <= 0.5) {
       td.style.color = 'red'
       }
     }
