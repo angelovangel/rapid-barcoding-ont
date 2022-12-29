@@ -32,17 +32,22 @@ tab1 <-  fluidRow(
       title = "Enter sample information and assign barcodes", collapsible = F,
       fluidRow(
         column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Use 50 - 100 ng for gDNA and approx 20 fmoles for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
-        column(3, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'plasmid')),
+        column(2, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'plasmid')),
         #column(3, uiOutput('sample_amount')),
-        column(3, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
+        column(2, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
         #column(2, actionButton('protocol', 'Show protocol', width = '100%', style = 'margin-top:25px')),
         column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:25px')),
+        column(2, downloadButton('download_samples', 'Download sample sheet', width = '100%', style = 'margin-top:25px')),
         column(2, downloadButton('download', 'Download Opentrons protocol', width = '100%', style = 'margin-top:25px'))
       ),
       uiOutput('protocol_instructions'),
       tags$hr(),
-      column(4, rHandsontableOutput('hot')),
-      column(8, reactableOutput('plate'), 
+      column(4, 
+             tags$p("Enter sample information here"),
+             rHandsontableOutput('hot')),
+      column(8, 
+             tags$p("Sample - barcode plate preview"),
+             reactableOutput('plate'), 
              tags$hr(),
              tags$p("ONT rapid barcode plate"), 
              reactableOutput('barcode_plate'))
@@ -193,7 +198,7 @@ server = function(input, output, session) {
       paste0('Reaction volume is <b>', protocol$rxn_vol, '</b> ul (', 
              protocol$sample_vol, ' ul sample + ', protocol$bc_vol, 
              ' ul barcode). Minimal pipetting volume is 0.5 ul, maximum sample volume is ',
-             protocol$sample_vol, ' ul. The pool will have a total of ', round(protocol$total_fmoles, 2), ' fmoles.')
+             protocol$sample_vol, ' ul. The pool will have a total of <b>', round(protocol$total_fmoles, 2), ' fmoles.</b>')
       )
     })
     
@@ -208,6 +213,14 @@ server = function(input, output, session) {
     "
     output$hot <- renderRHandsontable({
       
+      # borders <- function(row_from, row_to) {
+      #   list(
+      #     range = list(from = list(row = row_from, col = 0), to = list(row = row_to, col = 6)),
+      #     top = list(width = 0, color = 'darkblue'),
+      #     bottom = list(width = 1, color = 'darkblue')
+      #   )
+      # }
+      
       rhandsontable(hot() %>% select(-c('bc_count', 'mycolor')),
                     stretchH  = 'all',  
                     #svol = 9,
@@ -219,7 +232,14 @@ server = function(input, output, session) {
         hot_col('dna_size', format = '0') %>%
         #hot_cell(1, 3, 'test') %>%
         hot_validate_numeric('conc', min = 1, max = 5000, allowInvalid = T)
+        # hot_table(customBorders = mapply(borders, 
+        #                                  row_from = c(0, 7, 15, 23, 31, 39), 
+        #                                  row_to = c(7, 15, 23, 31, 39, 47), 
+        #                                  SIMPLIFY = F)
+        #           )
+        # too slow
     })
+    
     
     output$plate <- renderReactable({
       reactable(plate()$sample, 
@@ -262,8 +282,8 @@ server = function(input, output, session) {
      write(myprotocol(), file = "")
     })
     
+    ### Downloads
     output$download <- downloadHandler(
-      
       filename = function() {
         paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-ont-protocol.py')
         },
@@ -271,6 +291,15 @@ server = function(input, output, session) {
         write(myprotocol(), con)
       }
     )
+    
+    output$download_samples <- downloadHandler(
+      filename = function() {
+        paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-samplesheet.csv')
+      },
+      content = function(con) {
+        write.csv(hot() %>% select(-c('bc_count', 'mycolor')), con)
+      }
+      )
 }
   
   
