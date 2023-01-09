@@ -198,7 +198,7 @@ server = function(input, output, session) {
       paste0('Reaction volume is <b>', protocol$rxn_vol, '</b> ul (', 
              protocol$sample_vol, ' ul sample + ', protocol$bc_vol, 
              ' ul barcode). Minimal pipetting volume is 0.5 ul, maximum sample volume is ',
-             protocol$sample_vol, ' ul. The pool will have a total of <b>', round(protocol$total_fmoles, 2), ' fmoles.</b>')
+             protocol$sample_vol, ' ul. <br>The pool will have a total of <b>', round(protocol$total_fmoles, 2), ' fmoles.</b>')
       )
     })
     
