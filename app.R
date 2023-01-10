@@ -7,6 +7,7 @@ library(tibble)
 library(stringr)
 library(reactable)
 library(dplyr)
+library(rmarkdown)
 
 wells_colwise <- lapply(1:12, function(x) {str_c(LETTERS[1:8], x)}) %>% unlist()
 barcodes <- str_c('barcode', formatC(1:96, width = 2, flag = '0'))
@@ -25,20 +26,20 @@ example_table <- make_dest()
 example_table$sample = c('sample1', 'sample2', 'sample3', rep(NA, 93))
 example_table$barcode = factor(c('barcode01', 'barcode02', 'barcode03', rep('', 93)), levels = barcodes)
 example_table$dna_size = c(10000, 20000, 20000, rep(NA, 93))
-example_table$conc = c(12, 10, 3.5, rep(NA, 93))
+example_table$conc = c(120, 80, 35, rep(NA, 93))
 
 tab1 <-  fluidRow(
   box(width = 12, height = 2800, status = "info", solidHeader = FALSE, 
       title = "Enter sample information and assign barcodes", collapsible = F,
       fluidRow(
-        column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Use 50 - 100 ng for gDNA and approx 20 fmoles for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
+        column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Use 50 - 100 ng for gDNA and approx 20 fmol for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
         column(2, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'plasmid')),
         #column(3, uiOutput('sample_amount')),
         column(2, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
-        #column(2, actionButton('protocol', 'Show protocol', width = '100%', style = 'margin-top:25px')),
+        column(2, actionButton('protocol', 'Show complete protocol', width = '100%', style = 'margin-top:25px')),
         column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:25px')),
         column(2, downloadButton('download_samples', 'Download sample sheet', width = '100%', style = 'margin-top:25px')),
-        column(2, downloadButton('download', 'Download Opentrons protocol', width = '100%', style = 'margin-top:25px'))
+        column(2, downloadButton('download', 'Download Opentrons script', width = '100%', style = 'margin-top:25px'))
       ),
       uiOutput('protocol_instructions'),
       tags$hr(),
@@ -70,7 +71,7 @@ ui <- dashboardPage(
      tabPanel(title = "Enter samples", icon = icon("vials"),
        tab1
      ),
-     tabPanel(title = "Protocol preview",
+     tabPanel(title = "Opentrons script preview", icon = icon('list'),
        tab2
      )
    )
@@ -159,13 +160,26 @@ server = function(input, output, session) {
       
       
   ### OBSERVERS
+  
+  #protocol_md <- rmarkdown::render('www/protocol.Rmd')
+  
     observeEvent(input$deck, {
       showModal(
         modalDialog(title = 'Opentrons deck preview',
                     HTML('<img src="deck.png">'),
                     size = 'l', easyClose = T, 
         )
+      )
+    })
+    
+    observeEvent(input$protocol, {
+      showModal(
+        modalDialog(title = 'ONT rapid barcoding lab protocol',
+                    HTML(readLines('www/protocol.html')),
+                    size = 'l', easyClose = T,
+          
         )
+      )
     })
     
     
@@ -195,10 +209,10 @@ server = function(input, output, session) {
     
     output$protocol_instructions <- renderText({
       HTML(
-      paste0('Reaction volume is <b>', protocol$rxn_vol, '</b> ul (', 
+      paste0('Reaction volume is <b>', protocol$rxn_vol, ' ul </b> (', 
              protocol$sample_vol, ' ul sample + ', protocol$bc_vol, 
              ' ul barcode). Minimal pipetting volume is 0.5 ul, maximum sample volume is ',
-             protocol$sample_vol, ' ul. <br>The pool will have a total of <b>', round(protocol$total_fmoles, 2), ' fmoles.</b>')
+             protocol$sample_vol, ' ul. <br>The pool will have a total of <b>', round(protocol$total_fmoles, 2), ' fmol.</b> Use around 100 fmol per pool for MinION (50 fmol for Flongle).')
       )
     })
     
