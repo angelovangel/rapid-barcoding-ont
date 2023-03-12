@@ -32,7 +32,7 @@ tab1 <-  fluidRow(
   box(width = 12, height = 2800, status = "info", solidHeader = FALSE, 
       title = "Enter sample information and assign barcodes", collapsible = F,
       fluidRow(
-        column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Use 50 - 100 ng for gDNA and approx 20 fmol for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
+        column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Use 50 ng for gDNA (> 4 samples) and approx 20 fmol for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
         column(2, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'plasmid')),
         #column(3, uiOutput('sample_amount')),
         column(2, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
@@ -64,7 +64,7 @@ tab2 <- fluidRow(
 ui <- dashboardPage(
   #useShinyalert(),
   
-  header = dashboardHeader(title = 'Generate ONT rapid barcoding Opentrons protocol', titleWidth = 800),
+  header = dashboardHeader(title = 'Generate ONT rapid barcoding (SQK-RBK114) Opentrons protocol', titleWidth = 800),
   sidebar = dashboardSidebar(disable = T),
   body = dashboardBody(
    tabsetPanel(
@@ -174,7 +174,7 @@ server = function(input, output, session) {
     
     observeEvent(input$protocol, {
       showModal(
-        modalDialog(title = 'ONT rapid barcoding lab protocol',
+        modalDialog(title = 'ONT rapid barcoding lab protocol (SQK-RBK114.96)',
                     HTML(readLines('www/protocol.html')),
                     size = 'l', easyClose = T,
           
@@ -186,13 +186,13 @@ server = function(input, output, session) {
     observe({
       if(input$protocol_type == 'plasmid') {
         protocol$bc_vol <- 0.5
-        protocol$rxn_vol <- 5
-        protocol$sample_vol <- 4.5
+        protocol$rxn_vol <- 5.5
+        protocol$sample_vol <- 5
         protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
       } else {
         protocol$bc_vol <- 1
-        protocol$rxn_vol <- 10
-        protocol$sample_vol <- 9
+        protocol$rxn_vol <- 11
+        protocol$sample_vol <- 10
         protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
       }
     })

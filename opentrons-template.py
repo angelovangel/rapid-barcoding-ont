@@ -24,7 +24,7 @@ volume3=[1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 watersource = 'A1'
 finaltube = 'B1'
 barcode_vol = 1
-total_rxn_vol = 10
+total_rxn_vol = 11
 ########################
 
 ######################## Calculations for full column transfer  - for rapid barcode plate #######################

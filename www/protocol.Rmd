@@ -8,17 +8,17 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-This protocol is for Oxford Nanopore sequencing of plasmid or bacterial genome samples using rapid barcoding kits (SQK-RBK...).  
+This protocol is for Oxford Nanopore sequencing of plasmid or bacterial genome samples using rapid barcoding kits (SQK-RBK114.96).  
 
 **1. Tagmentation**  
 
- - adjust DNA with water, add barcodes (Opentrons)
+ - adjust DNA with water, add barcodes (Opentrons). For gDNA, use 50 ng/sample if > 4 samples and 200 ng/sample if < 4 samples.
 
 | |gDNA| plasmid |
 |:---|---:|---:|
-| DNA + water | 9.0 ul | 4.5 ul |
+| DNA + water | 10.0 ul | 5.0 ul |
 | rapid barcode | 1.0 ul | 0.5 ul|
-| **total** | **10.0 ul** | **5.0 ul** |
+| **total** | **11.0 ul** | **5.5 ul** |
 
 
  - incubate 30 degrees for 2 minutes
@@ -28,7 +28,7 @@ This protocol is for Oxford Nanopore sequencing of plasmid or bacterial genome s
  
 **2. Pool and purify**  
 
- - pool all samples (Opentrons)  
+ - pool all samples (Opentrons), note down volume  
  - add equal volume SPRI beads, incubate 5 min room temperature  
  - wash beads 2x with 80% EtOH  
  - aspirate all EtOH and dry beads 30 seconds  
@@ -40,21 +40,22 @@ This protocol is for Oxford Nanopore sequencing of plasmid or bacterial genome s
 
  - measure pool conc with Qbit  
  - use 50 fmol in 5 ul (Flongle) or 100 fmol in 11 ul (MinION)
- - add RAP-F 0.5 ul (Flongle) or 1 ul (MinION)
+ - dilute adaptor - 1.5 ul rapid adapter (RA) + 3.5 ul adapter dilution buffer (ADB)
+ - add diluted adaptor 0.5 ul (Flongle) or 1 ul (MinION)
  - incubate 5 min RT
  - put on ice
 
 ***
 
-**4. Load flow cell**  
+**4. Load flow cell - use max 20 fmol for R10.4.1**  
 
- - prime flow cell 3 ul FLT to 117 ul FB (Flongle) or 30 ul FLT to one vial of FB (MinION)
+ - prime flow cell - 30 ul FCT + 5 ul BSA at 50 mg/ul to one vial (1170 ul) of FCF (MinION)
  - library mix
  
 |    | Flongle | MinION |
 |:---|---:|---:|
-| SBII | 15 ul | 37.5 ul |
-| LBII | 10 ul | 25.5 ul|
+| Sequencing buffer (SB) | 15 ul | 37.5 ul |
+| Library beads (LIB) | 10 ul | 25.5 ul|
 | library | 5 ul | 12.0 ul|
 
 
