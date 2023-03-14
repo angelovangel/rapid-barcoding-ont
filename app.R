@@ -92,8 +92,7 @@ server = function(input, output, session) {
     hot <- reactive({
       if(!is.null(input$hot)) {
           as_tibble(hot_to_r(input$hot)) %>%
-          #mutate(fmoles = input$ng/((dna_size*617.96) + 36.04) * 1000000) %>%
-          mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
+          #mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
           mutate(ul = input$ng/conc) %>%
           mutate(
             ul = case_when(
@@ -103,6 +102,7 @@ server = function(input, output, session) {
             )
             #ul = if_else(ul > protocol$sample_vol, protocol$sample_vol, ul)
             ) %>%
+          mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
           add_count(barcode, name = 'bc_count') %>% # used to track if barcodes are unique 
           mutate(mycolor = if_else(bc_count > 1, 'red', 'black'))
       } else {
@@ -212,7 +212,7 @@ server = function(input, output, session) {
       paste0('Reaction volume is <b>', protocol$rxn_vol, ' ul </b> (', 
              protocol$sample_vol, ' ul sample + ', protocol$bc_vol, 
              ' ul barcode). Minimal pipetting volume is 0.5 ul, maximum sample volume is ',
-             protocol$sample_vol, ' ul. <br>The pool will have a total of <b>', round(protocol$total_fmoles, 2), ' fmol.</b> Use around 100 fmol per pool for MinION (50 fmol for Flongle).')
+             protocol$sample_vol, ' ul. <br>The pool will have a total of <b>', round(protocol$total_fmoles, 2), ' fmol.</b> Load around 100 fmol for MinION (20 fmol for R10.4.1).')
       )
     })
     
@@ -222,7 +222,7 @@ server = function(input, output, session) {
       "function(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.NumericRenderer.apply(this, arguments);
       
-      if (value >= 4.5 || value <= 0.5) {
+      if (value >= 5 || value <= 0.5) {
       td.style.color = 'red'
       }
     }
@@ -231,7 +231,7 @@ server = function(input, output, session) {
       "function(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.NumericRenderer.apply(this, arguments);
       
-      if (value >= 9 || value <= 0.5) {
+      if (value >= 10 || value <= 0.5) {
       td.style.color = 'red'
       }
     }
