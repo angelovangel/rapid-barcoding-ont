@@ -173,13 +173,7 @@ server = function(input, output, session) {
     })
     
     observeEvent(input$protocol, {
-      showModal(
-        modalDialog(title = 'ONT rapid barcoding lab protocol (SQK-RBK114.96)',
-                    HTML(readLines('www/protocol.html')),
-                    size = 'l', easyClose = T,
-          
-        )
-      )
+      browseURL('www/protocol.html')
     })
     
     
