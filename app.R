@@ -39,7 +39,9 @@ tab1 <-  fluidRow(
         column(2, actionButton('protocol', 'Show complete protocol', 
                                width = '100%', 
                                style = 'margin-top:25px', 
-                               onclick = "location.href = 'protocol.html';")),
+                               onclick = "window.open('protocol.html', '_blank')"
+                               )
+               ),
         #column(2, tags$a('Show complete protocol', href = "protocol.html", target = "_blank")),
         column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:25px')),
         column(2, downloadButton('download_samples', 'Download sample sheet', width = '100%', style = 'margin-top:25px')),

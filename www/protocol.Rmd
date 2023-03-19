@@ -1,5 +1,5 @@
 ---
-title: ""
+title: "ONT rapid plasmid/bacterial genome sequencing"
 output: html_document
 ---
 
@@ -17,6 +17,8 @@ This protocol is for Oxford Nanopore sequencing of plasmid or bacterial genome s
 **1. Tagmentation**  
 
  - adjust DNA with water, add barcodes (Opentrons). For gDNA, use 50 ng/sample if > 4 samples and 200 ng/sample if < 4 samples.
+ 
+ 
 ```{r table1, results='asis'} 
 
 kbl(
@@ -27,6 +29,7 @@ kbl(
   )
 ) %>%
   kable_styling(position = 'left', full_width = F, bootstrap_options = 'hover', 'condensed') %>%
+  row_spec(0, bold = F, background = '#999999;', color =  '#fff;') %>%
   row_spec(3, bold = T)
 
 ```
@@ -66,11 +69,12 @@ kbl(
 kbl(
   data.frame(
     . = c('Sequencing buffer (SB)', 'Library beads (LIB)', 'Library', 'Total'),
-    Flongle = c(15, 10, 5, 30),
+    Flongle = c(15.0, 10.0, 5.0, 30.0),
     MinION = c(37.5, 25.5, 12.0, 75.0)
   )
 ) %>%
   kable_styling(position = 'left', full_width = F, bootstrap_options = 'hover', 'condensed') %>%
+  row_spec(0, bold = F, background = '#999999;', color =  '#fff;') %>%
   row_spec(4, bold = T)
   #kable_styling(full_width = F, position = "left")
   
