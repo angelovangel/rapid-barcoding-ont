@@ -25,6 +25,7 @@ example_table <- make_dest()
 #example_table$source_well = factor(x = c('A1', 'B1', 'C1', rep(NA, 93)), levels = wells_colwise),
 example_table$sample = c('sample1', 'sample2', 'sample3', rep(NA, 93))
 example_table$barcode = factor(c('barcode01', 'barcode02', 'barcode03', rep('', 93)), levels = barcodes)
+#example_table$barcode = str_c('barcode', formatC(1:96, width = 2, flag = '0'))
 example_table$dna_size = c(10000, 20000, 20000, rep(NA, 93))
 example_table$conc = c(120, 80, 35, rep(NA, 93))
 
@@ -57,7 +58,8 @@ tab1 <-  fluidRow(
              reactableOutput('plate'), 
              tags$hr(),
              tags$p("ONT rapid barcode plate"), 
-             reactableOutput('barcode_plate'))
+             rHandsontableOutput('barcode_plate')
+             )
   )
 )
 
@@ -292,19 +294,19 @@ server = function(input, output, session) {
                 )
     })
     
-    output$barcode_plate <- renderReactable({
-      bc_plate <- make_dest()
-      bc_plate$barcode <- barcodes
-      bc_plate_view <- view_plate(bc_plate, well_ids_column = 'well', columns_to_display = 'barcode')
-      reactable(bc_plate_view$barcode, wrap = F, bordered = T,
-                compact = T, fullWidth = T, sortable = F, 
-                defaultColDef = colDef(minWidth = 50,
-                                       html = TRUE, 
-                                       headerStyle = list(background = "#f7f7f8", fontSize = '80%'), 
-                                       style = list(fontSize = '80%')
-                                       )
-                )
+    output$barcode_plate <- renderRHandsontable({
+      
+      # this is a good snippet!
+      printbc <- function(x, y) {
+        str_c('barcode', formatC(x:y, width = 2, flag = '0'))
+      }
+      bcplate <- data.frame(mapply(printbc, seq(1,96, by = 8), seq(8, 96, by = 8)))
+      rownames(bcplate) <- LETTERS[1:8]
+      colnames(bcplate) <- 1:12
+      
+      rhandsontable(bcplate, readOnly = T)
     })
+    
     
     output$protocol_preview <- renderPrint({
      write(myprotocol(), file = "")
