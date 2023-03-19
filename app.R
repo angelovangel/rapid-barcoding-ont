@@ -36,7 +36,11 @@ tab1 <-  fluidRow(
         column(2, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'plasmid')),
         #column(3, uiOutput('sample_amount')),
         column(2, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
-        column(2, actionButton('protocol', 'Show complete protocol', width = '100%', style = 'margin-top:25px')),
+        column(2, actionButton('protocol', 'Show complete protocol', 
+                               width = '100%', 
+                               style = 'margin-top:25px', 
+                               onclick = "location.href = 'protocol.html';")),
+        #column(2, tags$a('Show complete protocol', href = "protocol.html", target = "_blank")),
         column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:25px')),
         column(2, downloadButton('download_samples', 'Download sample sheet', width = '100%', style = 'margin-top:25px')),
         column(2, downloadButton('download', 'Download Opentrons script', width = '100%', style = 'margin-top:25px'))
@@ -172,9 +176,10 @@ server = function(input, output, session) {
       )
     })
     
-    observeEvent(input$protocol, {
-      browseURL('www/protocol.html')
-    })
+    # observeEvent(input$protocol, {
+    #   tags$a()
+    #   #utils::browseURL('www/protocol.html')
+    # })
     
     
     observe({
