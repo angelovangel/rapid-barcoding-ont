@@ -8,6 +8,8 @@ library(stringr)
 library(reactable)
 library(dplyr)
 library(rmarkdown)
+library(curl)
+library(waiter)
 
 wells_colwise <- lapply(1:12, function(x) {str_c(LETTERS[1:8], x)}) %>% unlist()
 barcodes <- str_c('barcode', formatC(1:96, width = 2, flag = '0'))
@@ -34,9 +36,9 @@ tab1 <-  fluidRow(
       title = "Enter sample information and assign barcodes", collapsible = F,
       fluidRow(
         column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Use 50 ng for gDNA (> 4 samples) and approx 20 fmol for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
-        column(2, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'plasmid')),
-        #column(3, uiOutput('sample_amount')),
-        column(2, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
+        column(2, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'gDNA')),
+        column(3, uiOutput('sample_amount')),
+        #column(2, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
         column(2, actionButton('protocol', 'Show complete protocol', 
                                width = '100%', 
                                style = 'margin-top:25px', 
@@ -92,7 +94,18 @@ ui <- dashboardPage(
 server = function(input, output, session) {
   
   ### read template
-  protocol_template <- readLines('opentrons-template.py', warn = F)
+  protocol_url <- "https://raw.githubusercontent.com/angelovangel/opentrons/main/protocols/02-ont-rapid.py"
+  
+  if (curl::has_internet()) {
+    waiter_show(html = spin_wave())
+    con <- url(protocol_url)
+    protocol_template <- readLines(con, warn = F)
+    close(con)
+    waiter_hide()
+  } else {
+    protocol_template <- readLines('rapid-ont-template.py', warn = F)
+  }
+  
   
   ### REACTIVES
     protocol <- reactiveValues(bc_vol = 0, rxn_vol = 0, sample_vol = 0, total_fmoles = 0)
@@ -100,8 +113,11 @@ server = function(input, output, session) {
     hot <- reactive({
       if(!is.null(input$hot)) {
           as_tibble(hot_to_r(input$hot)) %>%
-          #mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
-          mutate(ul = input$ng/conc) %>%
+          mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
+          # the ul needed is calculated as input$ng_or_fmoles/conc for gDNA ans input$ng_or_fmoles/fmoles for plasmid
+          mutate(
+            ul = input$ng_or_fmoles/conc
+            ) %>%
           mutate(
             ul = case_when(
               ul > protocol$sample_vol ~ protocol$sample_vol,
@@ -110,7 +126,7 @@ server = function(input, output, session) {
             )
             #ul = if_else(ul > protocol$sample_vol, protocol$sample_vol, ul)
             ) %>%
-          mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
+          #mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
           add_count(barcode, name = 'bc_count') %>% # used to track if barcodes are unique 
           mutate(mycolor = if_else(bc_count > 1, 'red', 'black'))
       } else {
@@ -200,15 +216,15 @@ server = function(input, output, session) {
       }
     })
     
-  ### OUTPUTS
-    # change to ng or fmol depending on protocol selected
-    # output$sample_amount <- renderUI({
-    #   if(input$protocol_type == 'plasmid') {
-    #     numericInput('fmol', ' fmol per reaction (~ 20)', value = 20, min = 1, max = 200, step = 1)
-    #   } else {
-    #     numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)
-    #   } 
-    # })
+  ## OUTPUTS
+  # change to ng or fmol depending on protocol selected
+  output$sample_amount <- renderUI({
+    if(input$protocol_type == 'plasmid') {
+      numericInput('ng_or_fmoles', 'fmol per reaction (~ 20)', value = 20, min = 1, max = 200, step = 1)
+    } else {
+      numericInput('ng_or_fmoles', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)
+    }
+  })
     
     output$protocol_instructions <- renderText({
       HTML(
