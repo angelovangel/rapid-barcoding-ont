@@ -18,7 +18,7 @@ barcodes <- str_c('barcode', formatC(1:96, width = 2, flag = '0'))
 make_dest <- function() {
     dest <- tibble(well = wells_colwise, 
                    sample = NA, barcode = NA, 
-                   dna_size = NA, conc = NA, fmoles = NA, 
+                   dna_size = NA, conc = NA, fmoles = NA, fmolperul = NA,
                    ul = NA, bc_count = NA, mycolor = NA)
     dest
 }
@@ -37,7 +37,7 @@ tab1 <-  fluidRow(
       fluidRow(
         column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Use 50 ng for gDNA (> 4 samples) and approx 20 fmol for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
         column(2, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'gDNA')),
-        column(3, uiOutput('sample_amount')),
+        column(2, uiOutput('sample_amount')),
         #column(2, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
         column(2, actionButton('protocol', 'Show complete protocol', 
                                width = '100%', 
@@ -113,19 +113,22 @@ server = function(input, output, session) {
     hot <- reactive({
       if(!is.null(input$hot)) {
           as_tibble(hot_to_r(input$hot)) %>%
-          mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
+          mutate(
+            fmolperul = conc/((dna_size*617.96) + 36.04) * 1000000,
+            fmoles = ul * fmolperul) %>%
           # the ul needed is calculated as input$ng_or_fmoles/conc for gDNA ans input$ng_or_fmoles/fmoles for plasmid
           mutate(
-            ul = input$ng_or_fmoles/conc
+            ul = case_when(
+              input$protocol_type == 'plasmid' ~ input$ng_or_fmoles/fmolperul, 
+              input$protocol_type == 'gDNA' ~ input$ng_or_fmoles/conc,
+              TRUE ~ 0)
             ) %>%
           mutate(
             ul = case_when(
               ul > protocol$sample_vol ~ protocol$sample_vol,
               ul < 0.5 ~ 0.5,
               TRUE ~ ul
-            )
-            #ul = if_else(ul > protocol$sample_vol, protocol$sample_vol, ul)
-            ) %>%
+            )) %>%
           #mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
           add_count(barcode, name = 'bc_count') %>% # used to track if barcodes are unique 
           mutate(mycolor = if_else(bc_count > 1, 'red', 'black'))
@@ -267,7 +270,7 @@ server = function(input, output, session) {
       #   )
       # }
       
-      rhandsontable(hot() %>% select(-c('bc_count', 'mycolor')),
+      rhandsontable(hot() %>% select(-c('bc_count', 'mycolor', 'fmolperul')),
                     stretchH  = 'all',  
                     #svol = 9,
                     height = 2800,
