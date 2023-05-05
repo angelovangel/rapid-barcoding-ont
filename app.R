@@ -19,7 +19,7 @@ make_dest <- function() {
     dest <- tibble(well = wells_colwise, 
                    sample = NA, barcode = NA, 
                    dna_size = NA, conc = NA, fmoles = NA, fmolperul = NA,
-                   ul = NA, bc_count = NA, mycolor = NA)
+                   ul = NA, ng = NA, bc_count = NA, mycolor = NA)
     dest
 }
 
@@ -129,7 +129,7 @@ server = function(input, output, session) {
               ul < 0.5 ~ 0.5,
               TRUE ~ ul
             )) %>%
-          #mutate(fmoles = (ul * conc)/((dna_size*617.96) + 36.04) * 1000000) %>%
+          mutate(ng = ul * conc) %>%
           add_count(barcode, name = 'bc_count') %>% # used to track if barcodes are unique 
           mutate(mycolor = if_else(bc_count > 1, 'red', 'black'))
       } else {
@@ -244,7 +244,7 @@ server = function(input, output, session) {
       "function(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.NumericRenderer.apply(this, arguments);
       
-      if (value >= 5 || value <= 0.5) {
+      if (value >= 5.0 || value <= 0.5) {
       td.style.color = 'red'
       }
     }
@@ -253,13 +253,33 @@ server = function(input, output, session) {
       "function(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.NumericRenderer.apply(this, arguments);
       
-      if (value >= 10 || value <= 0.5) {
+      if (value >= 10.0 || value <= 0.5) {
       td.style.color = 'red'
       }
     }
     "
       }
     }
+    # renders first column well in grey for better plate overview
+    rendergrey <- function() {
+      "
+    function(instance, td, row, col, prop, value, cellProperties) {
+      Handsontable.renderers.TextRenderer.apply(this, arguments);
+      
+      tbl = this.HTMLWidgets.widgets[0]
+      //hrows = tbl.params.greylines
+      hrows = [0 ,8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88]
+      hrows = hrows instanceof Array ? hrows : [hrows] 
+
+      
+      if (hrows.includes(row)) {
+        td.style.background = '#D6EAF8';
+      }
+      
+      return td;
+  }"
+    }
+    
     output$hot <- renderRHandsontable({
       
       # borders <- function(row_from, row_to) {
@@ -270,17 +290,21 @@ server = function(input, output, session) {
       #   )
       # }
       
-      rhandsontable(hot() %>% select(-c('bc_count', 'mycolor', 'fmolperul')),
+      rhandsontable(hot() %>% select(-c('bc_count', 'mycolor', 'fmolperul', 'fmoles')),
                     stretchH  = 'all',  
                     #svol = 9,
                     height = 2800,
                     rowHeaders = NULL) %>%
-        hot_col('well', readOnly = T) %>%
-        hot_col('fmoles', readOnly = T) %>%
+        #hot_cols(renderer = rendergrey() ) %>%
+        hot_col('well', readOnly = T, renderer = rendergrey() ) %>%
+        hot_col('barcode', type = 'dropdown') %>%
+        hot_col('ng', readOnly = T, type = 'numeric', format = '0.0') %>%
+        #hot_col('fmoles', readOnly = T, type= 'numeric', format = '0.0') %>%
         hot_col('ul', readOnly = T, renderer = renderer() ) %>% # highlight volumes > max
         hot_col('dna_size', format = '0') %>%
         #hot_cell(1, 3, 'test') %>%
         hot_validate_numeric('conc', min = 1, max = 5000, allowInvalid = T)
+        #hot_cols(renderer = rendergrey() )
         # hot_table(customBorders = mapply(borders, 
         #                                  row_from = c(0, 7, 15, 23, 31, 39), 
         #                                  row_to = c(7, 15, 23, 31, 39, 47), 
