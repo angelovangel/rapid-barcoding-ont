@@ -18,8 +18,8 @@ barcodes <- str_c('barcode', formatC(1:96, width = 2, flag = '0'))
 make_dest <- function() {
     dest <- tibble(well = wells_colwise, 
                    sample = NA, barcode = NA, 
-                   dna_size = NA, conc = NA, fmoles = NA, fmolperul = NA,
-                   ul = NA, ng = NA, bc_count = NA, mycolor = NA)
+                   dna_size = NA, conc = NA, fmolperul = NA,
+                   ul = NA, ng = NA, fmoles = NA, bc_count = NA, mycolor = NA)
     dest
 }
 
@@ -52,10 +52,10 @@ tab1 <-  fluidRow(
       ),
       uiOutput('protocol_instructions'),
       tags$hr(),
-      column(4, 
+      column(5, 
              tags$p("Source plate - enter sample information here"),
              rHandsontableOutput('hot')),
-      column(8, 
+      column(7, 
              tags$p("Reaction plate preview"),
              reactableOutput('plate'), 
              tags$hr(),
@@ -290,7 +290,7 @@ server = function(input, output, session) {
       #   )
       # }
       
-      rhandsontable(hot() %>% select(-c('bc_count', 'mycolor', 'fmolperul', 'fmoles')),
+      rhandsontable(hot() %>% select(-c('bc_count', 'mycolor', 'fmolperul')),
                     stretchH  = 'all',  
                     #svol = 9,
                     height = 2800,
@@ -299,7 +299,7 @@ server = function(input, output, session) {
         hot_col('well', readOnly = T, renderer = rendergrey() ) %>%
         hot_col('barcode', type = 'dropdown') %>%
         hot_col('ng', readOnly = T, type = 'numeric', format = '0.0') %>%
-        #hot_col('fmoles', readOnly = T, type= 'numeric', format = '0.0') %>%
+        hot_col('fmoles', readOnly = T, type= 'numeric', format = '0.0') %>%
         hot_col('ul', readOnly = T, renderer = renderer() ) %>% # highlight volumes > max
         hot_col('dna_size', format = '0') %>%
         #hot_cell(1, 3, 'test') %>%
