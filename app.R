@@ -108,7 +108,7 @@ server = function(input, output, session) {
   
   
   ### REACTIVES
-    protocol <- reactiveValues(bc_vol = 0, rxn_vol = 0, sample_vol = 0, total_fmoles = 0)
+    protocol <- reactiveValues(bc_vol = 0, rxn_vol = 0, sample_vol = 0, total_fmoles = 0, total_ng = 0)
     
     hot <- reactive({
       if(!is.null(input$hot)) {
@@ -211,11 +211,13 @@ server = function(input, output, session) {
         protocol$rxn_vol <- 5.5
         protocol$sample_vol <- 5
         protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
+        protocol$total_ng <- sum(hot()$ng, na.rm = T)
       } else {
         protocol$bc_vol <- 1
         protocol$rxn_vol <- 11
         protocol$sample_vol <- 10
         protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
+        protocol$total_ng <- sum(hot()$ng, na.rm = T)
       }
     })
     
@@ -234,7 +236,11 @@ server = function(input, output, session) {
       paste0('Reaction volume is <b>', protocol$rxn_vol, ' ul </b> (', 
              protocol$sample_vol, ' ul sample + ', protocol$bc_vol, 
              ' ul barcode). Minimal pipetting volume is 0.5 ul, maximum sample volume is ',
-             protocol$sample_vol, ' ul. <br>The pool will have a total of <b>', round(protocol$total_fmoles, 2), ' fmol.</b> Load around 100 fmol for MinION (20 fmol for R10.4.1).')
+             protocol$sample_vol, ' ul. <br>The pool will have a total of ', 
+             round(protocol$total_fmoles, 0), 
+             ' fmol and ', round(protocol$total_ng, 0),' ng, or <b> ',
+             round(protocol$total_fmoles/protocol$total_ng, 3),
+             ' fmol/ng</b>. <br>Load around 100 fmol for MinION (20 fmol for R10.4.1).')
       )
     })
     
