@@ -240,7 +240,7 @@ server = function(input, output, session) {
              round(protocol$total_fmoles, 0), 
              ' fmol and ', round(protocol$total_ng, 0),' ng, or <b> ',
              round(protocol$total_fmoles/protocol$total_ng, 3),
-             ' fmol/ng</b>. <br>Load around 100 fmol for MinION (20 fmol for R10.4.1).')
+             ' fmol/ng</b> (use this for calculating how much to take to RAP addition and loading on flow cell). <br>Load around 100 fmol for MinION (20 fmol for R10.4.1).')
       )
     })
     
