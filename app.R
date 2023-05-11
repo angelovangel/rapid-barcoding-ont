@@ -17,7 +17,7 @@ barcodes <- str_c('barcode', formatC(1:96, width = 2, flag = '0'))
 # creates base empty dataframe to view and fill later
 make_dest <- function() {
     dest <- tibble(well = wells_colwise, 
-                   sample = NA, barcode = NA, 
+                   user = NA, sample = NA, barcode = NA, 
                    dna_size = NA, conc = NA, fmolperul = NA,
                    ul = NA, ng = NA, fmoles = NA, bc_count = NA, mycolor = NA)
     dest
@@ -25,6 +25,7 @@ make_dest <- function() {
 
 example_table <- make_dest()
 #example_table$source_well = factor(x = c('A1', 'B1', 'C1', rep(NA, 93)), levels = wells_colwise),
+example_table$user = c(rep('angeloas', 3), rep(NA, 93))
 example_table$sample = c('sample1', 'sample2', 'sample3', rep(NA, 93))
 example_table$barcode = factor(c('barcode01', 'barcode02', 'barcode03', rep('', 93)), levels = barcodes)
 #example_table$barcode = str_c('barcode', formatC(1:96, width = 2, flag = '0'))
@@ -38,19 +39,21 @@ tab1 <-  fluidRow(
         column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Use 50 ng for gDNA (> 4 samples) and approx 20 fmol for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
         column(2, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'gDNA')),
         column(2, uiOutput('sample_amount')),
-        #column(2, numericInput('ng', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)),
+        uiOutput('protocol_instructions'),
+        ),
+      fluidRow(
         column(2, actionButton('protocol', 'Show complete protocol', 
                                width = '100%', 
-                               style = 'margin-top:25px', 
+                               style = 'margin-top:15px', 
                                onclick = "window.open('protocol.html', '_blank')"
                                )
                ),
-        #column(2, tags$a('Show complete protocol', href = "protocol.html", target = "_blank")),
-        column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:25px')),
-        column(2, downloadButton('download_samples', 'Download sample sheet', width = '100%', style = 'margin-top:25px')),
-        column(2, downloadButton('download', 'Download Opentrons script', width = '100%', style = 'margin-top:25px'))
+        column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:15px')),
+        column(2, downloadButton('download_samples', 'Sample sheet', width = '100%', style = 'margin-top:15px')),
+        column(2, downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:15px')),
+        column(2, downloadButton('download_nxf_sample', 'Nextflow sample sheet', width = '100%', style = 'margin-top:15px')),
+        column(2, downloadButton('download_nxf_size', 'Nextflow size sheet', width = '100%', style = 'margin-top:15px'))
       ),
-      uiOutput('protocol_instructions'),
       tags$hr(),
       column(5, 
              tags$p("Source plate - enter sample information here"),
@@ -66,6 +69,11 @@ tab1 <-  fluidRow(
 )
 
 tab2 <- fluidRow(
+  box(width = 12, status = "info", solidHeader = FALSE, title = "", collapsible = F,
+      uiOutput('wetlab')
+      )
+)
+tab3 <- fluidRow(
   box(width = 12, status = "info", solidHeader = FALSE, title = "Opentrons protocol preview", collapsible = F,
       verbatimTextOutput('protocol_preview')
       )
@@ -78,12 +86,9 @@ ui <- dashboardPage(
   sidebar = dashboardSidebar(disable = T),
   body = dashboardBody(
    tabsetPanel(
-     tabPanel(title = "Enter samples", icon = icon("vials"),
-       tab1
-     ),
-     tabPanel(title = "Opentrons script preview", icon = icon('list'),
-       tab2
-     )
+     tabPanel(title = "Enter samples", icon = icon("list"), tab1),
+     #tabPanel(title = "Wet lab protocol", icon = icon('vials'), tab2),
+     tabPanel(title = "Opentrons script preview", icon = icon('code'), tab3)
    )
   )
 )
@@ -227,7 +232,7 @@ server = function(input, output, session) {
     if(input$protocol_type == 'plasmid') {
       numericInput('ng_or_fmoles', 'fmol per reaction (~ 20)', value = 20, min = 1, max = 200, step = 1)
     } else {
-      numericInput('ng_or_fmoles', 'ng per reaction (50-100 ng)', value = 100, min = 10, max = 500, step = 10)
+      numericInput('ng_or_fmoles', 'ng per reaction (50-100 ng)', value = 50, min = 5, max = 500, step = 10)
     }
   })
     
@@ -235,8 +240,8 @@ server = function(input, output, session) {
       HTML(
       paste0('Reaction volume is <b>', protocol$rxn_vol, ' ul </b> (', 
              protocol$sample_vol, ' ul sample + ', protocol$bc_vol, 
-             ' ul barcode). Minimal pipetting volume is 0.5 ul, maximum sample volume is ',
-             protocol$sample_vol, ' ul. <br>The pool will have a total of ', 
+             ' ul barcode). Min volume: 0.5 ul, max volume: ',
+             protocol$sample_vol, ' ul. <br>Pool: ', 
              round(protocol$total_fmoles, 0), 
              ' fmol and ', round(protocol$total_ng, 0),' ng, or <b> ',
              round(protocol$total_fmoles/protocol$total_ng, 3),
@@ -361,8 +366,9 @@ server = function(input, output, session) {
      write(myprotocol(), file = "")
     })
     
+    
     ### Downloads
-    output$download <- downloadHandler(
+    output$download_script <- downloadHandler(
       filename = function() {
         paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-ont-protocol.py')
         },
@@ -376,9 +382,30 @@ server = function(input, output, session) {
         paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-samplesheet.csv')
       },
       content = function(con) {
-        write.csv(hot() %>% select(-c('bc_count', 'mycolor')), con)
+        write.csv(hot() %>% select(-c('bc_count', 'mycolor')), con, row.names = F)
       }
       )
+    
+    # Nextflow wf-clone validation sheets
+    output$download_nxf_sample <- downloadHandler(
+      filename = function() {
+        paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-nxf-sample.csv')
+      }, 
+      content = function(con) {
+        myfile <- hot() %>% mutate(alias = str_c(user, "_", sample)) %>% select(alias, barcode)
+        write.csv(myfile[complete.cases(myfile), ], con, row.names = F, quote = F)
+      }
+    )
+    
+    output$download_nxf_size <- downloadHandler(
+      filename = function() {
+        paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-nxf-size.csv')
+      }, 
+      content = function(con) {
+        myfile <- hot() %>% mutate(alias = str_c(user, "_", sample), approx_size = dna_size) %>% select(alias, approx_size)
+        write.csv(myfile[complete.cases(myfile), ], con, row.names = F, quote = F)
+      }
+    )
 }
   
   
