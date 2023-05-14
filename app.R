@@ -17,8 +17,8 @@ barcodes <- str_c('barcode', formatC(1:96, width = 2, flag = '0'))
 # creates base empty dataframe to view and fill later
 make_dest <- function() {
     dest <- tibble(well = wells_colwise, 
-                   user = NA, sample = NA, barcode = NA, 
-                   dna_size = NA, conc = NA, fmolperul = NA,
+                   user = NA, sample = NA, dna_size = NA, 
+                   conc = NA, barcode = NA, fmolperul = NA,
                    ul = NA, ng = NA, fmoles = NA, bc_count = NA, mycolor = NA)
     dest
 }
@@ -238,7 +238,7 @@ server = function(input, output, session) {
     
     output$protocol_instructions <- renderText({
       HTML(
-      paste0('Reaction volume is <b>', protocol$rxn_vol, ' ul </b> (', 
+      paste0('Reaction volume: <b>', protocol$rxn_vol, ' ul </b> (', 
              protocol$sample_vol, ' ul sample + ', protocol$bc_vol, 
              ' ul barcode). Min volume: 0.5 ul, max volume: ',
              protocol$sample_vol, ' ul. <br>Pool: ', 
