@@ -25,7 +25,7 @@ make_dest <- function() {
 
 example_table <- make_dest()
 #example_table$source_well = factor(x = c('A1', 'B1', 'C1', rep(NA, 93)), levels = wells_colwise),
-example_table$user = c(rep('angeloas', 3), rep(NA, 93))
+example_table$user = c(rep('angeloas', 2), 'putraa', rep(NA, 93))
 example_table$sample = c('sample1', 'sample2', 'sample3', rep(NA, 93))
 example_table$barcode = factor(c('barcode01', 'barcode02', 'barcode03', rep('', 93)), levels = barcodes)
 #example_table$barcode = str_c('barcode', formatC(1:96, width = 2, flag = '0'))
@@ -242,7 +242,10 @@ server = function(input, output, session) {
   })
   
   output$user_select <- renderUI({
-    selectInput('user_selected', '', choices = unique(na.omit(hot()$user)), width = '100%')
+    selectizeInput('user_selected', '', 
+                   choices = unique(na.omit(hot()$user)), 
+                   multiple =F, 
+                   width = '100%')
   })
     
     output$protocol_instructions <- renderText({
@@ -382,7 +385,12 @@ server = function(input, output, session) {
         paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-ont-protocol.py')
         },
       content = function(con) {
-        write(myprotocol(), con)
+        # at download time, replace name so that it appears on the Opentrons app
+        replacement <- paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-ont-protocol.py')
+        write(myprotocol() %>%
+                str_replace(pattern = "02-ont-plasmid.py", 
+                            replacement = replacement), 
+              con)
       }
     )
     
