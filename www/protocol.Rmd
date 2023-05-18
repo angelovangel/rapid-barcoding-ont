@@ -42,19 +42,18 @@ kbl(
 **2. Pool and purify**  
 
  - pool all samples (Opentrons), note down volume  
- - add equal volume SPRI beads, incubate 5 min room temperature  
+ - add 0.5x AMPure XP beads (AXP), incubate on a Hula mixer 5 min room temperature  
  - wash beads 2x with 80% EtOH  
  - aspirate all EtOH and dry beads 30 seconds  
- - resuspend in 15 ul EB, incubate 10 minutes, take out eluate in new tube (increase the elution volume by 15ul for each 12 plasmids in the pool)  
+ - resuspend in 15 ul EB, incubate 10 minutes, take out eluate in new tube
  
 ***
 
 **3. RAP addition**  
 
  - measure pool conc with Qbit  
- - use 50 fmol in 5 ul (Flongle) or 100 fmol in 11 ul (MinION)
- - dilute adaptor - 1.5 ul rapid adapter (RA) + 3.5 ul adapter dilution buffer (ADB)
- - add diluted adaptor 0.5 ul (Flongle) or 1 ul (MinION)
+ - dilute adapter - 1.5 ul rapid adapter (RA) + 3.5 ul adapter dilution buffer (ADB)
+ - add 1 ul diluted adaptor to the barcoded DNA
  - incubate 5 min RT
  - put on ice
 
