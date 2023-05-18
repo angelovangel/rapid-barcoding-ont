@@ -49,8 +49,10 @@ tab1 <-  fluidRow(
                                )
                ),
         column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:20px')),
-        column(3, downloadButton('download_samples', 'Sample sheet', width = '100%', style = 'margin-top:20px'),
-                  downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:20px')),
+        column(3, downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:20px'),
+                  downloadButton('download_samples', 'Sample sheet', width = '100%', style = 'margin-top:20px'),
+                  checkboxInput('pause_before_bc', 'Pause before barcode addition', value = F)
+               ),
         
         #column(2, downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:15px')),
         column(4,
@@ -184,6 +186,11 @@ server = function(input, output, session) {
   })
       
   myprotocol <- reactive({
+    
+    # pause before bc addition
+    if(input$pause_before_bc) {
+      protocol_template <- str_replace(protocol_template, '# optional pause #', '')
+    }
     str_replace(protocol_template, 'sourcewells1=.*', paste0("sourcewells1=['", myvalues()[1], "']")) %>%
       str_replace('volume1=.*', paste0('volume1=[', myvalues()[2], ']')) %>%
       str_replace('volume2=.*', paste0('volume2=[', myvalues()[3], ']')) %>%
@@ -194,7 +201,7 @@ server = function(input, output, session) {
       str_replace('total_rxn_vol = .*', paste0('total_rxn_vol = ', protocol$rxn_vol))
     
     })
-      
+  
       
   ### OBSERVERS
   
