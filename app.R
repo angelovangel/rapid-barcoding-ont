@@ -167,10 +167,17 @@ server = function(input, output, session) {
     })
     
   myvalues <- reactive({
-    sample_wells <- wells_colwise[hot()$sample != ''] %>% str_replace_na(replacement = ' ')
+    #sample_wells <- wells_colwise[hot()$sample != ''] %>% str_replace_na(replacement = ' ')
+    
+    # fix bug where deleting a well did not leave an empty entry in the vector
+    sample_wells <- rep(' ', 96)
+    i <- which(hot()$sample != '')
+    sample_wells[i] <- hot()$well[i]
+    
     volume1 <- str_replace_na(hot()$ul, '0') # replace NA with 0, gDNA
     # water wells is always A1
     volume2 <- str_replace_na(protocol$sample_vol - hot()$ul, '0') # water
+    
     barcode_wells <- wells_colwise[match(hot()$barcode, barcodes)] %>% str_replace_na(replacement = ' ')
     volume3 <- rep(protocol$bc_vol, 96)[match(hot()$barcode, barcodes)] %>% str_replace_na(replacement = '0') 
     # see this how it works
@@ -264,7 +271,8 @@ server = function(input, output, session) {
              round(protocol$total_fmoles, 0), 
              ' fmol and ', round(protocol$total_ng, 0),' ng, or <b> ',
              round(protocol$total_fmoles/protocol$total_ng, 3),
-             ' fmol/ng</b> (use this for calculating how much to take to RAP addition and loading on flow cell). <br>Load around 100 fmol for MinION (20 fmol for R10.4.1).')
+             ' fmol/ng</b>. <br>Load around 100 fmol for MinION (20 fmol for R10.4.1).'
+             )
       )
     })
     
