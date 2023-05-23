@@ -138,7 +138,7 @@ server = function(input, output, session) {
           mutate(
             ul = case_when(
               ul > protocol$sample_vol ~ protocol$sample_vol,
-              ul < 0.5 ~ 0.5,
+              (ul > 0 & ul < 0.5) ~ 0.5,
               TRUE ~ ul
             )) %>%
           mutate(ng = ul * conc) %>%
