@@ -414,7 +414,7 @@ server = function(input, output, session) {
         paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-samplesheet.csv')
       },
       content = function(con) {
-        write.csv(hot() %>% select(-c('bc_count', 'mycolor')), con, row.names = F)
+        write.csv(hot() %>% select(-c('bc_count', 'mycolor')), con, row.names = F, quote = F)
       }
       )
     
