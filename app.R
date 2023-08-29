@@ -58,7 +58,8 @@ tab1 <-  fluidRow(
         column(4,
                uiOutput('user_select'),
                downloadButton('download_nxf_sample', 'Nextflow sample sheet', width = '100%', style = 'margin-top:0px'),
-               downloadButton('download_nxf_size', 'Nextflow size sheet', width = '100%', style = 'margin-top:0px'))
+               #downloadButton('download_nxf_size', 'Nextflow size sheet', width = '100%', style = 'margin-top:0px')
+               )
         #column(2, downloadButton('download_nxf_size', 'Nextflow size sheet', width = '100%', style = 'margin-top:15px'))
       ),
       tags$hr(),
@@ -426,24 +427,24 @@ server = function(input, output, session) {
       content = function(con) {
         myfile <- hot() %>% 
           filter(user == input$user_selected) %>%
-          mutate(alias = str_c(user, "_", sample)) %>% 
-          select(alias, barcode)
+          mutate(alias = str_c(user, "_", sample), approx_size = dna_size) %>% 
+          select(barcode, alias, approx_size)
         write.csv(myfile[complete.cases(myfile), ], con, row.names = F, quote = F)
       }
     )
     
-    output$download_nxf_size <- downloadHandler(
-      filename = function() {
-        paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-',input$user_selected, '-nxfsize.csv')
-      }, 
-      content = function(con) {
-        myfile <- hot() %>% 
-          filter(user == input$user_selected) %>%
-          mutate(alias = str_c(user, "_", sample), approx_size = dna_size) %>% 
-          select(alias, approx_size)
-        write.csv(myfile[complete.cases(myfile), ], con, row.names = F, quote = F)
-      }
-    )
+    # output$download_nxf_size <- downloadHandler(
+    #   filename = function() {
+    #     paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-',input$user_selected, '-nxfsize.csv')
+    #   }, 
+    #   content = function(con) {
+    #     myfile <- hot() %>% 
+    #       filter(user == input$user_selected) %>%
+    #       mutate(alias = str_c(user, "_", sample), approx_size = dna_size) %>% 
+    #       select(alias, approx_size)
+    #     write.csv(myfile[complete.cases(myfile), ], con, row.names = F, quote = F)
+    #   }
+    # )
 }
   
   
