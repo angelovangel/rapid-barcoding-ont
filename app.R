@@ -10,12 +10,13 @@ library(dplyr)
 library(rmarkdown)
 library(curl)
 library(waiter)
+library(scales)
 
 wells_colwise <- lapply(1:12, function(x) {str_c(LETTERS[1:8], x)}) %>% unlist()
 barcodes <- str_c('barcode', formatC(1:96, width = 2, flag = '0'))
 
 # use prefixes in large numbers, label_number returns a function
-silabel <- scales::label_number(scale_cut = cut_short_scale(), accuracy = 1, suffix = ' bases')
+silabel <- scales::label_number(scale_cut = scales::cut_short_scale(), accuracy = 1, suffix = ' bases')
 
 # creates base empty dataframe to view and fill later
 make_dest <- function() {
