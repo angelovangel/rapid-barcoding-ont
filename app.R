@@ -14,6 +14,9 @@ library(waiter)
 wells_colwise <- lapply(1:12, function(x) {str_c(LETTERS[1:8], x)}) %>% unlist()
 barcodes <- str_c('barcode', formatC(1:96, width = 2, flag = '0'))
 
+# use prefixes in large numbers, label_number returns a function
+silabel <- scales::label_number(scale_cut = cut_short_scale(), accuracy = 1, suffix = ' bases')
+
 # creates base empty dataframe to view and fill later
 make_dest <- function() {
     dest <- tibble(well = wells_colwise, 
@@ -121,7 +124,7 @@ server = function(input, output, session) {
   
   
   ### REACTIVES
-    protocol <- reactiveValues(bc_vol = 0, rxn_vol = 0, sample_vol = 0, total_fmoles = 0, total_ng = 0)
+    protocol <- reactiveValues(bc_vol = 0, rxn_vol = 0, sample_vol = 0, total_fmoles = 0, total_ng = 0, total_bases = 0)
     
     hot <- reactive({
       if(!is.null(input$hot)) {
@@ -237,12 +240,14 @@ server = function(input, output, session) {
         protocol$sample_vol <- 5
         protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
         protocol$total_ng <- sum(hot()$ng, na.rm = T)
+        protocol$total_bases <- sum(hot()$dna_size, na.rm = T)
       } else {
         protocol$bc_vol <- 1
         protocol$rxn_vol <- 11
         protocol$sample_vol <- 10
         protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
         protocol$total_ng <- sum(hot()$ng, na.rm = T)
+        protocol$total_bases <- sum(hot()$dna_size, na.rm = T)
       }
     })
     
@@ -270,9 +275,10 @@ server = function(input, output, session) {
              ' ul barcode). Min volume: 0.5 ul, max volume: ',
              protocol$sample_vol, ' ul. <br>Pool: ', 
              round(protocol$total_fmoles, 0), 
-             ' fmol and ', round(protocol$total_ng, 0),' ng, or <b> ',
+             ' fmol and ', round(protocol$total_ng, 0),' ng, or ',
              round(protocol$total_fmoles/protocol$total_ng, 3),
-             ' fmol/ng</b>. <br>Load around 100 fmol for MinION (20 fmol for R10.4.1).'
+             ' fmol/ng. Total bases in pool: ', silabel(protocol$total_bases), 
+             '<br>Load around 100 fmol for MinION (20 fmol for R10.4.1).'
              )
       )
     })
