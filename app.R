@@ -40,7 +40,7 @@ tab1 <-  fluidRow(
   box(width = 12, height = 2800, status = "info", solidHeader = FALSE, 
       title = "Enter sample information and assign barcodes", collapsible = F,
       fluidRow(
-        column(12, tags$p('This protocol will normalise templates, add rapid barcodes, and pool samples. Use 50 ng for gDNA (> 4 samples) and approx 20 fmol for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
+        column(12, tags$p('This protocol will normalise templates, add rapid barcodes, incubate, and pool samples. Use 50 ng for gDNA (> 4 samples) and approx 20 fmol for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
         column(2, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'gDNA')),
         column(2, uiOutput('sample_amount')),
         uiOutput('protocol_instructions'),
@@ -55,7 +55,7 @@ tab1 <-  fluidRow(
         column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:20px')),
         column(3, downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:20px'),
                   downloadButton('download_samples', 'Sample sheet', width = '100%', style = 'margin-top:20px'),
-                  checkboxInput('pause_before_bc', 'Pause before barcode addition', value = F)
+                  checkboxInput('pause_before_inc', 'Pause before incubation (cover plate)', value = F)
                ),
         
         #column(2, downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:15px')),
@@ -111,7 +111,7 @@ ui <- dashboardPage(
 server = function(input, output, session) {
   
   ### read template
-  protocol_url <- "https://raw.githubusercontent.com/angelovangel/opentrons/main/protocols/02-ont-rapid.py"
+  protocol_url <- "https://raw.githubusercontent.com/angelovangel/opentrons/main/protocols/02-ont-rapid-pcr.py"
   
   if (curl::has_internet()) {
     waiter_show(html = spin_wave())
@@ -200,7 +200,7 @@ server = function(input, output, session) {
   myprotocol <- reactive({
     
     # pause before bc addition
-    if(input$pause_before_bc) {
+    if(input$pause_before_inc) {
       protocol_template <- str_replace(protocol_template, '# optional pause #', '')
     }
     str_replace(protocol_template, 'sourcewells1=.*', paste0("sourcewells1=['", myvalues()[1], "']")) %>%
@@ -222,7 +222,7 @@ server = function(input, output, session) {
     observeEvent(input$deck, {
       showModal(
         modalDialog(title = 'Opentrons deck preview',
-                    HTML('<img src="deck.png">'),
+                    HTML('<img src="deck-pcr.png">'),
                     size = 'l', easyClose = T, 
         )
       )
