@@ -411,7 +411,7 @@ server = function(input, output, session) {
         # at download time, replace name so that it appears on the Opentrons app
         replacement <- paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-ont-protocol.py')
         write(myprotocol() %>%
-                str_replace(pattern = "02-ont-plasmid.py", 
+                str_replace(pattern = "02-ont-rapid-pcr.py", 
                             replacement = replacement), 
               con)
       }
