@@ -3,7 +3,7 @@ from opentrons import protocol_api
 # this file serves as a template only, a Shiny app, replace-from-excel.py and the template excel file is used to change the wells and volumes
 
 metadata = {
-    'protocolName': '02-ont-plasmid-pcr.py',
+    'protocolName': '02-ont-rapid-pcr.py',
     'author': 'BCL <angel.angelov@kaust.edu.sa>',
     'description': 'ONT plasmid sequencing - normalise templates, add rapid adapter, incubate, pool',
     'apiLevel': '2.8'
@@ -78,7 +78,6 @@ def run(ctx: protocol_api.ProtocolContext):
 
     # setup ODTC
     odtc.open_lid()
-    odtc.set_lid_temperature(100)
     odtc.set_block_temperature(temperature = 15)
 
     # distribute water without tip change first
@@ -144,6 +143,7 @@ def run(ctx: protocol_api.ProtocolContext):
 
     # ODTC
     odtc.close_lid()
+    odtc.set_lid_temperature(100)
     odtc.set_block_temperature(30, hold_time_minutes = 2)
     odtc.set_block_temperature(80, hold_time_minutes = 2)
     odtc.set_block_temperature(10)
