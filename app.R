@@ -55,7 +55,7 @@ tab1 <-  fluidRow(
         column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:20px')),
         column(3, downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:20px'),
                   downloadButton('download_samples', 'Sample sheet', width = '100%', style = 'margin-top:20px'),
-                  checkboxInput('pause_before_inc', 'Pause before incubation (cover plate)', value = F)
+                  checkboxInput('pause_before_inc', 'Pause before incubation (cover plate)', value = T)
                ),
         
         #column(2, downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:15px')),
