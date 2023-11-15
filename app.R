@@ -293,23 +293,30 @@ server = function(input, output, session) {
     
     renderer <- function() {
       if (input$protocol_type == 'plasmid') {
+      # no other clever way of passing arguments to the JS function, so using paste0
+      maxvolume <- 5 * as.numeric(input$sample_volume_factor) 
+      paste0(
       "function(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.NumericRenderer.apply(this, arguments);
       
-      if (value >= 5.0 || value <= 0.5) {
+      if (value >=", maxvolume," || value <= 0.5) {
       td.style.color = 'red'
       }
     }
     "
+      )
       } else {
+      maxvolume <- 10 * as.numeric(input$sample_volume_factor) 
+      paste0(
       "function(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.NumericRenderer.apply(this, arguments);
       
-      if (value >= 10.0 || value <= 0.5) {
+      if (value >=", maxvolume, " || value <= 0.5) {
       td.style.color = 'red'
       }
     }
     "
+      )
       }
     }
     # renders first column well in grey for better plate overview
