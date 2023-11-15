@@ -43,7 +43,14 @@ tab1 <-  fluidRow(
         column(12, tags$p('This protocol will normalise templates, add rapid barcodes, incubate, and pool samples. Use 50 ng for gDNA (> 4 samples) and approx 20 fmol for plasmid. Volumes out of range and duplicate barcodes will be marked in red')),
         column(2, selectizeInput('protocol_type', 'Select protocol', choices = c('plasmid', 'gDNA'), selected = 'gDNA')),
         column(2, uiOutput('sample_amount')),
-        uiOutput('protocol_instructions'),
+        column(2, selectizeInput('sample_volume_factor', 
+                              label = 'Sample vol factor', 
+                              choices = list('1x' = 1, '1.5x' = 1.5, '2x' = 2), 
+                              selected = '1x', multiple = F)
+               )
+        ),
+      fluidRow(
+        column(12, uiOutput('protocol_instructions')),
         ),
       fluidRow(
         column(2, actionButton('protocol', 'Show complete protocol', 
@@ -237,15 +244,15 @@ server = function(input, output, session) {
     observe({
       if(input$protocol_type == 'plasmid') {
         protocol$bc_vol <- 0.5
-        protocol$rxn_vol <- 5.5
-        protocol$sample_vol <- 5
+        protocol$sample_vol <- 5 * as.numeric(input$sample_volume_factor)
+        protocol$rxn_vol <- protocol$bc_vol + protocol$sample_vol
         protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
         protocol$total_ng <- sum(hot()$ng, na.rm = T)
         protocol$total_bases <- sum(hot()$dna_size, na.rm = T)
       } else {
         protocol$bc_vol <- 1
-        protocol$rxn_vol <- 11
-        protocol$sample_vol <- 10
+        protocol$sample_vol <- 10 * as.numeric(input$sample_volume_factor)
+        protocol$rxn_vol <- protocol$bc_vol + protocol$sample_vol
         protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
         protocol$total_ng <- sum(hot()$ng, na.rm = T)
         protocol$total_bases <- sum(hot()$dna_size, na.rm = T)
@@ -274,12 +281,11 @@ server = function(input, output, session) {
       paste0('Reaction volume: <b>', protocol$rxn_vol, ' ul </b> (', 
              protocol$sample_vol, ' ul sample + ', protocol$bc_vol, 
              ' ul barcode). Min volume: 0.5 ul, max volume: ',
-             protocol$sample_vol, ' ul. <br>Pool: ', 
+             protocol$sample_vol, ' ul. Pool: ', 
              round(protocol$total_fmoles, 0), 
              ' fmol and ', round(protocol$total_ng, 0),' ng, or ',
              round(protocol$total_fmoles/protocol$total_ng, 3),
-             ' fmol/ng. Total bases in pool: ', silabel(protocol$total_bases), 
-             '<br>Load around 100 fmol for MinION (20 fmol for R10.4.1).'
+             ' fmol/ng. Total bases in pool: ', silabel(protocol$total_bases)
              )
       )
     })
