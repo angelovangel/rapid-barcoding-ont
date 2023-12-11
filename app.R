@@ -47,7 +47,11 @@ tab1 <-  fluidRow(
                               label = 'Sample vol factor', 
                               choices = list('1x' = 1, '1.5x' = 1.5, '2x' = 2), 
                               selected = '1x', multiple = F)
-               )
+               ),
+        column(2, selectizeInput('consolidate_volume_factor', 
+                                 label = 'Consolidate vol factor', 
+                                 choices = list('0.9x' = 0.9, '0.75x' = 0.75, '0.5x' = 0.5, '0.25x' = 0.25), 
+                                 selected = '1x', multiple = F))
         ),
       fluidRow(
         column(12, uiOutput('protocol_instructions')),
@@ -127,7 +131,7 @@ server = function(input, output, session) {
     close(con)
     waiter_hide()
   } else {
-    protocol_template <- readLines('rapid-ont-template.py', warn = F)
+    protocol_template <- readLines('02-ont-rapid-pcr.py', warn = F)
   }
   
   
@@ -217,7 +221,8 @@ server = function(input, output, session) {
       str_replace('volume3=.*', paste0('volume3=[', myvalues()[5], ']')) %>%
       
       str_replace('barcode_vol = .*', paste0('barcode_vol = ', protocol$bc_vol)) %>%
-      str_replace('total_rxn_vol = .*', paste0('total_rxn_vol = ', protocol$rxn_vol))
+      str_replace('total_rxn_vol = .*', paste0('total_rxn_vol = ', protocol$rxn_vol)) %>%
+      str_replace('consolidate_vol_fraction = .*', paste0('consolidate_vol_fraction = ', input$consolidate_volume_factor))
     
     })
   
