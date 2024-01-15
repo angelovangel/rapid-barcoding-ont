@@ -64,17 +64,17 @@ tab1 <-  fluidRow(
                                )
                ),
         column(2, actionButton('deck', 'Show deck layout', width = '100%', style = 'margin-top:20px')),
-        column(3, downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:20px'),
+        column(4, downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:20px'),
                   downloadButton('download_samples', 'Sample sheet', width = '100%', style = 'margin-top:20px'),
-                  checkboxInput('pause_before_inc', 'Pause before incubation (cover plate)', value = T)
-               ),
+                  checkboxInput('pause_before_inc', 'Pause before incubation (cover plate)', value = T)),
+        
         
         #column(2, downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:15px')),
-        column(4,
-               uiOutput('user_select'),
-               downloadButton('download_nxf_sample', 'Nextflow sample sheet', width = '100%', style = 'margin-top:0px'),
-               #downloadButton('download_nxf_size', 'Nextflow size sheet', width = '100%', style = 'margin-top:0px')
-               )
+        # column(4,
+        #        uiOutput('user_select'),
+        #        downloadButton('download_nxf_sample', 'Nextflow sample sheet', width = '100%', style = 'margin-top:0px'),
+        #        #downloadButton('download_nxf_size', 'Nextflow size sheet', width = '100%', style = 'margin-top:0px')
+        #        )
         #column(2, downloadButton('download_nxf_size', 'Nextflow size sheet', width = '100%', style = 'margin-top:15px'))
       ),
       tags$hr(),
@@ -274,12 +274,12 @@ server = function(input, output, session) {
     }
   })
   
-  output$user_select <- renderUI({
-    selectizeInput('user_selected', '', 
-                   choices = unique(na.omit(hot()$user)), 
-                   multiple =F, 
-                   width = '100%')
-  })
+  # output$user_select <- renderUI({
+  #   selectizeInput('user_selected', '', 
+  #                  choices = unique(na.omit(hot()$user)), 
+  #                  multiple =F, 
+  #                  width = '100%')
+  # })
     
     output$protocol_instructions <- renderText({
       HTML(
@@ -445,18 +445,18 @@ server = function(input, output, session) {
       )
     
     # Nextflow wf-clone validation sheets
-    output$download_nxf_sample <- downloadHandler(
-      filename = function() {
-        paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-',input$user_selected,'-nxfsample.csv')
-      }, 
-      content = function(con) {
-        myfile <- hot() %>% 
-          filter(user == input$user_selected) %>%
-          mutate(alias = str_c(user, "_", sample), approx_size = dna_size) %>% 
-          select(barcode, alias, approx_size)
-        write.csv(myfile[complete.cases(myfile), ], con, row.names = F, quote = F)
-      }
-    )
+    # output$download_nxf_sample <- downloadHandler(
+    #   filename = function() {
+    #     paste0(format(Sys.time(), "%Y%m%d-%H%M%S"), '-',input$user_selected,'-nxfsample.csv')
+    #   }, 
+    #   content = function(con) {
+    #     myfile <- hot() %>% 
+    #       filter(user == input$user_selected) %>%
+    #       mutate(alias = str_c(user, "_", sample), approx_size = dna_size) %>% 
+    #       select(barcode, alias, approx_size)
+    #     write.csv(myfile[complete.cases(myfile), ], con, row.names = F, quote = F)
+    #   }
+    # )
     
     # output$download_nxf_size <- downloadHandler(
     #   filename = function() {
