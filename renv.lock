@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.2.2",
+    "Version": "4.3.1",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -9,6 +9,14 @@
     ]
   },
   "Packages": {
+    "BH": {
+      "Package": "BH",
+      "Version": "1.84.0-0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "a8235afbcd6316e6e91433ea47661013",
+      "Requirements": []
+    },
     "R6": {
       "Package": "R6",
       "Version": "2.5.1",
@@ -33,6 +41,17 @@
       "Hash": "e9c08b94391e9f3f97355841229124f2",
       "Requirements": []
     },
+    "anytime": {
+      "Package": "anytime",
+      "Version": "0.3.9",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "74a64813f17b492da9c6afda6b128e3d",
+      "Requirements": [
+        "BH",
+        "Rcpp"
+      ]
+    },
     "askpass": {
       "Package": "askpass",
       "Version": "1.1",
@@ -51,18 +70,33 @@
       "Hash": "543776ae6848fde2f48ff3816d0628bc",
       "Requirements": []
     },
+    "bsicons": {
+      "Package": "bsicons",
+      "Version": "0.1.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "d8f892fbd94d0b9b1f6d688b05b8633c",
+      "Requirements": [
+        "cli",
+        "htmltools",
+        "rlang"
+      ]
+    },
     "bslib": {
       "Package": "bslib",
-      "Version": "0.4.1",
+      "Version": "0.6.1",
       "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "89a0cd0c45161e3bd1c1e74a2d65e516",
+      "Repository": "RSPM",
+      "Hash": "c0d8599494bc7fb408cd206bbdd9cab0",
       "Requirements": [
+        "base64enc",
         "cachem",
         "htmltools",
         "jquerylib",
         "jsonlite",
+        "lifecycle",
         "memoise",
+        "mime",
         "rlang",
         "sass"
       ]
@@ -107,10 +141,10 @@
     },
     "commonmark": {
       "Package": "commonmark",
-      "Version": "1.8.1",
+      "Version": "1.9.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "b6e3e947d1d7ebf3d2bdcea1bde63fe7",
+      "Hash": "d691c61bff84bd63c383874d2d0c3307",
       "Requirements": []
     },
     "cpp11": {
@@ -253,10 +287,10 @@
     },
     "htmltools": {
       "Package": "htmltools",
-      "Version": "0.5.4",
+      "Version": "0.5.7",
       "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "9d27e99cc90bd701c0a7a63e5923f9b7",
+      "Repository": "RSPM",
+      "Hash": "2d7b3857980e0e0d0a1fd6f11928ab0f",
       "Requirements": [
         "base64enc",
         "digest",
@@ -682,6 +716,22 @@
         "xtable"
       ]
     },
+    "shinyWidgets": {
+      "Package": "shinyWidgets",
+      "Version": "0.8.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "96bb249d21b7473dbeb0311702ef5288",
+      "Requirements": [
+        "anytime",
+        "bslib",
+        "htmltools",
+        "jsonlite",
+        "rlang",
+        "sass",
+        "shiny"
+      ]
+    },
     "shinydashboard": {
       "Package": "shinydashboard",
       "Version": "0.7.2",
@@ -691,6 +741,18 @@
       "Requirements": [
         "htmltools",
         "promises",
+        "shiny"
+      ]
+    },
+    "shinyjs": {
+      "Package": "shinyjs",
+      "Version": "2.1.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "802e4786b353a4bb27116957558548d5",
+      "Requirements": [
+        "digest",
+        "jsonlite",
         "shiny"
       ]
     },
@@ -859,10 +921,10 @@
     },
     "xfun": {
       "Package": "xfun",
-      "Version": "0.35",
+      "Version": "0.41",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "f576593107bdf9aa7db48ef75a8c05fb",
+      "Hash": "460a5e0fe46a80ef87424ad216028014",
       "Requirements": []
     },
     "xml2": {
