@@ -93,7 +93,7 @@ sidebar <- sidebar(
 # )
 vbs <- list(
   value_box(
-    title = textOutput('vbs0_0'),
+    title = textOutput('vbs00'),
     value = textOutput('vbs0'),
     theme = 'secondary'
   ),
@@ -372,7 +372,7 @@ server <- function(input, output, session) {
     }
   })
   
-  output$vbs0_0 <- renderText({
+  output$vbs00 <- renderText({
     paste0('Reactions (', protocol$users, ' users)')
   })
   output$vbs0 <- renderText({
