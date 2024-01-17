@@ -23,6 +23,11 @@ volume3=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
 watersource = 'A1'
 finaltube = 'B1'
 consolidate_vol_fraction = 0.9
+source_labware = 'stack_plate_biorad96well'
+aspirate_factor = 1
+dispense_factor = 1
+
+# Variables replaced by the Shiny app
 
 # use 1 ul barcode and 11 ul total rxn vol if it is gDNA, for plasmid use half volumes
 # the decision is based on the barcode volumes (volume3) 
@@ -65,7 +70,7 @@ def run(ctx: protocol_api.ProtocolContext):
     destplate = odtc.load_labware('biorad_96_wellplate_200ul_pcr') # IMPORTANT - use biorad plates!!!
 
     #destplate = ctx.load_labware('pcrplate_96_wellplate_200ul', '5', 'Destination plate') # stack of 96 well base plate and PCR plate
-    sourceplate = ctx.load_labware('stack_plate_biorad96well', '4', 'Source plate') # stack of 96 well base plate and PCR plate
+    sourceplate = ctx.load_labware(source_labware, '4', 'Source plate') # stack of 96 well base plate and PCR plate
     barcodeplate = ctx.load_labware('biorad_96_wellplate_200ul_pcr', '9', 'Rapid barcode plate')
     sourcetube = ctx.load_labware('opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap', '5', 'Tube rack')
 
@@ -75,9 +80,17 @@ def run(ctx: protocol_api.ProtocolContext):
     s20 = ctx.load_instrument('p20_single_gen2', mount='left', tip_racks=tips20_single)
     m20 = ctx.load_instrument('p20_multi_gen2', mount='right', tip_racks=tips20_multi)
 
-    # set s20 flow rates globally, default is 7.56 
-    s20.flow_rate.aspirate = 5
-    s20.flow_rate.dispense = 4
+    s20.flow_rate.aspirate = s20.flow_rate.aspirate / aspirate_factor
+    s20.flow_rate.dispense = s20.flow_rate.dispense / dispense_factor
+    m20.flow_rate.aspirate = s20.flow_rate.aspirate / aspirate_factor
+    m20.flow_rate.dispense = s20.flow_rate.dispense / dispense_factor
+
+    ctx.comment('----------------------------------------------------------------')
+    ctx.comment('Using s20 aspirate flow rate of ' + str(s20.flow_rate.aspirate) + ' ul/s')
+    ctx.comment('Using s20 dispense flow rate of ' + str(s20.flow_rate.dispense) + ' ul/s')
+    ctx.comment('Using m20 aspirate flow rate of ' + str(m20.flow_rate.aspirate) + ' ul/s')
+    ctx.comment('Using m20 dispense flow rate of ' + str(m20.flow_rate.dispense) + ' ul/s')
+    ctx.comment('----------------------------------------------------------------')
 
     # setup ODTC
     odtc.open_lid()
