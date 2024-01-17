@@ -15,12 +15,13 @@ library(plater)
 library(shinyjs)
 library(processx)
 library(htmltools)
+library(scales)
 
 wells_colwise <- lapply(1:12, function(x) {str_c(LETTERS[1:8], x)}) %>% unlist()
 barcodes <- str_c('barcode', formatC(1:96, width = 2, flag = '0'))
 
 # use prefixes in large numbers, label_number returns a function
-silabel <- scales::label_number(scale_cut = scales::cut_short_scale(), accuracy = 1, suffix = ' bases')
+silabel <- scales::label_number(scale_cut = scales::cut_short_scale(), accuracy = 1, suffix = '')
 
 # creates base empty dataframe to view and fill later
 make_dest <- function() {
@@ -50,9 +51,11 @@ accordion1 <- list(
 )
 accordion2 <- list(
   checkboxInput('pause_before_inc', 'Pause before incubation (cover plate)', value = T),
+  checkboxInput('reuse_tip', 'Reuse tip in pooling', value = F),
   selectizeInput(
     'sample_labware', 'Samples labware', 
-    choices = c('Biorad plate' = 'biorad_96_wellplate_200ul_pcr', 'Stacked strips/ABI plate' = 'stack_plate_biorad96well')
+    choices = c('Stacked strips/plate' = 'stack_plate_biorad96well', 'Biorad plate' = 'biorad_96_wellplate_200ul_pcr'), 
+    multiple = F
     ),
   selectizeInput('sample_volume_factor', 
                  label = 'Sample vol factor', 
@@ -61,7 +64,13 @@ accordion2 <- list(
   selectizeInput('consolidate_volume_factor', 
                  label = 'Consolidate vol factor', 
                  choices = list('0.9x' = 0.9, '0.75x' = 0.75, '0.5x' = 0.5, '0.25x' = 0.25), 
-                 selected = '1x', multiple = F)
+                 selected = '1x', multiple = F),
+  numericInputIcon('aspirate_speed', 'Aspirate speed', 
+                   min = 5, max = 100, value = 100, step = 5, 
+                   icon = list(NULL, icon("percent"))),
+  numericInputIcon('dispense_speed', 'Dispense speed', 
+                   min = 5, max = 100, value = 100, step = 5, 
+                   icon = list(NULL, icon("percent")))
 )
 
 sidebar <- sidebar(
@@ -72,6 +81,48 @@ sidebar <- sidebar(
   )  
 )
 
+# value boxes with useful information
+# titles <- c('Rxn volume' = 'vbs1', 'Total fmoles' = 'vbs2', 'Total ng' = 'vbs3', 'Total bases' = 'vbs4')
+# vbs <- list(
+#   lapply(
+#     titles,
+#     function(x) {
+#       value_box(title = names(x), value = textOutput(x), theme = 'secondary')
+#     }
+#   )
+# )
+vbs <- list(
+  value_box(
+    title = textOutput('vbs0_0'),
+    value = textOutput('vbs0'),
+    theme = 'secondary'
+  ),
+  value_box(
+    title = 'Rxn volume',
+    value = textOutput('vbs1'),
+    #showcase = bs_icon('dot'),
+    theme = 'secondary'
+    #a(textOutput('vbs1b'))
+  ),
+  value_box(
+    title = "Total fmoles",
+    value = textOutput('vbs2'),
+    #showcase = bs_icon("three-dots"),
+    theme = "secondary"
+  ),
+  value_box(
+    title = "Total ng",
+    value = textOutput('vbs3'),
+    #showcase = bs_icon("chevron-bar-down"),
+    theme = "secondary"
+  ),
+  value_box(
+    title = "Total bases",
+    value = textOutput('vbs4'),
+    #showcase = bs_icon("chevron-bar-down"),
+    theme = "secondary"
+  )
+)
 panel1 <- list(
   div(
     tags$a('Source plate', tooltip(bs_icon("info-circle"), 'Enter sample information here')),
@@ -94,11 +145,20 @@ ui <- page_navbar(
   sidebar = sidebar,
   nav_panel(
     'Samples and barcodes',
-    layout_column_wrap(
-      width = NULL, fill = F, 
-      style = htmltools::css(grid_template_columns = 'auto 2fr'),
-      #width = 1/2,
-      panel1[[1]], panel1[[2]]
+    div(
+      layout_column_wrap(
+        height = '83px',
+        width = '200px',
+        !!!vbs
+      )
+    ),
+    div(
+      layout_column_wrap(
+        width = NULL, fill = F, 
+        style = htmltools::css(grid_template_columns = 'auto 2fr'),
+        #width = 1/2,
+        panel1[[1]], panel1[[2]]
+      )
     )
   ),
   nav_panel(
@@ -140,7 +200,7 @@ server <- function(input, output, session) {
   }
   
   ### Reactives
-  protocol <- reactiveValues(bc_vol = 0, rxn_vol = 0, sample_vol = 0, total_fmoles = 0, total_ng = 0, total_bases = 0)
+  protocol <- reactiveValues(bc_vol = 0, rxn_vol = 0, sample_vol = 0, total_fmoles = 0, total_ng = 0, total_bases = 0, samples = 0, users = 0)
   
   hot <- reactive({
     if(!is.null(input$hot)) {
@@ -224,8 +284,11 @@ server <- function(input, output, session) {
       
       str_replace('barcode_vol = .*', paste0('barcode_vol = ', protocol$bc_vol)) %>%
       str_replace('total_rxn_vol = .*', paste0('total_rxn_vol = ', protocol$rxn_vol)) %>%
-      str_replace('consolidate_vol_fraction = .*', paste0('consolidate_vol_fraction = ', input$consolidate_volume_factor))
-    
+      str_replace('consolidate_vol_fraction = .*', paste0('consolidate_vol_fraction = ', input$consolidate_volume_factor)) %>%
+      str_replace('source_labware = .*', paste0("source_labware = ", "'", input$sample_labware, "'")) %>%
+      str_replace('aspirate_factor = .*', paste0('aspirate_factor = ', round(100/input$aspirate_speed, 2))) %>%
+      str_replace('dispense_factor = .*', paste0('dispense_factor = ', round(100/input$dispense_speed, 2))) %>%
+      str_replace('pool_reuse_tip = .*', paste0('pool_reuse_tip = ', if_else(input$reuse_tip, 'True', 'False')))
   })
   
   ### Observers
@@ -237,6 +300,9 @@ server <- function(input, output, session) {
       protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
       protocol$total_ng <- sum(hot()$ng, na.rm = T)
       protocol$total_bases <- sum(hot()$dna_size, na.rm = T)
+      protocol$samples <- 96 - str_count( myvalues()[1], ' ' )
+      protocol$users <- length(unique(hot()$user)) - 1
+      
     } else {
       protocol$bc_vol <- 1
       protocol$sample_vol <- 10 * as.numeric(input$sample_volume_factor)
@@ -244,6 +310,9 @@ server <- function(input, output, session) {
       protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
       protocol$total_ng <- sum(hot()$ng, na.rm = T)
       protocol$total_bases <- sum(hot()$dna_size, na.rm = T)
+      protocol$samples <- length(hot()$sample)
+      protocol$samples <- 96 - str_count( myvalues()[1], ' ' )
+      protocol$users <- length(unique(hot()$user)) - 1
     }
   })
   
@@ -301,6 +370,25 @@ server <- function(input, output, session) {
     } else {
       numericInput('ng_or_fmoles', 'ng per reaction (50-100 ng)', value = 50, min = 5, max = 500, step = 10)
     }
+  })
+  
+  output$vbs0_0 <- renderText({
+    paste0('Reactions (', protocol$users, ' users)')
+  })
+  output$vbs0 <- renderText({
+    paste0(protocol$samples)
+  })
+  output$vbs1 <- renderText({
+    paste0(protocol$rxn_vol, ' ul')
+  })
+  output$vbs2 <- renderText({
+    paste0(round(protocol$total_fmoles, 0), ' fmol')
+  })
+  output$vbs3 <- renderText({
+    paste0(round(protocol$total_ng, 0), ' ng')
+  })
+  output$vbs4 <- renderText({
+    paste0(silabel(protocol$total_bases))
   })
   
   renderer <- function() {
