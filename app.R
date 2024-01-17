@@ -50,6 +50,10 @@ accordion1 <- list(
 )
 accordion2 <- list(
   checkboxInput('pause_before_inc', 'Pause before incubation (cover plate)', value = T),
+  selectizeInput(
+    'sample_labware', 'Samples labware', 
+    choices = c('Biorad plate' = 'biorad_96_wellplate_200ul_pcr', 'Stacked strips/ABI plate' = 'stack_plate_biorad96well')
+    ),
   selectizeInput('sample_volume_factor', 
                  label = 'Sample vol factor', 
                  choices = list('1x' = 1, '1.5x' = 1.5, '2x' = 2), 
@@ -101,7 +105,9 @@ ui <- page_navbar(
     'Opentrons protocol', verbatimTextOutput('protocol_preview')
   ),
   nav_panel(
-    'Simulate run', verbatimTextOutput('simulate')
+    'Simulate run',
+    actionButton('simulate', 'Run simulation', width = '25%'),
+    verbatimTextOutput('stdout')
   ),
   nav_panel(
     'Deck layout', htmlOutput('deck')
@@ -117,6 +123,10 @@ ui <- page_navbar(
 )
 
 server <- function(input, output, session) {
+  
+  # add opentrons_simulate path
+  old_path <- Sys.getenv("PATH")
+  Sys.setenv(PATH = paste(old_path, Sys.getenv('OPENTRONS_PATH'), sep = ":"))
   
   ### Protocol
   protocol_url <- "https://raw.githubusercontent.com/angelovangel/opentrons/main/protocols/02-ont-rapid-pcr.py"
@@ -237,6 +247,52 @@ server <- function(input, output, session) {
     }
   })
   
+  # 
+  observeEvent(input$simulate, {
+    # clear stdout
+    shinyjs::html(id = "stdout", "")
+    
+    # check if opentrons_simulate is in path
+    if (system2('which', args = 'opentrons_simulate') == 1) {
+      shinyjs::html(id = 'stdout', "opentrons_simulate executable not found. Set the OPENTRONS_PATH variable to the opentrons_simulate path.")
+      return()
+    }
+    
+    # change button
+    shinyjs::disable(id = 'simulate')
+    shinyjs::html(id = 'simulate', "Working...")
+    tmp <- tempfile('protocol', fileext = '.py')
+    write(myprotocol(), file = tmp)
+    #ht <- as_tibble(hot_to_r(input$hot))
+    
+    withCallingHandlers({
+      if (FALSE) {
+        processx::run(
+          'echo', args = ("All volumes are 0, cannot simulate this!"),
+          stderr_to_stdout = TRUE, 
+          error_on_status = FALSE,
+          stdout_line_callback = function(line, proc) {message(line)}
+        )
+      } else {
+        processx::run(
+          'opentrons_simulate', 
+          args = c('-e', '-L', Sys.getenv('LABWARE_PATH'), tmp),
+          stderr_to_stdout = TRUE, 
+          error_on_status = FALSE,
+          stdout_line_callback = function(line, proc) {message(line)}, 
+        )
+      }
+      shinyjs::enable(id = 'simulate')
+      shinyjs::html(id = 'simulate', "Run simulation")
+    },
+    message = function(m) {
+      shinyjs::html(id = "stdout", html = m$message, add = TRUE); 
+      shinyjs::runjs("document.getElementById('stdout').scrollTo(0,1e9);") 
+      # scroll the page to bottom with each message, 1e9 is just a big number
+    }
+    )
+  })
+  
   ### Outputs
   # change to ng or fmol depending on protocol selected
   output$sample_amount <- renderUI({
@@ -348,7 +404,7 @@ server <- function(input, output, session) {
   })
   
   output$deck <- renderUI({
-    HTML('<img src="deck.png" height="600">')
+    HTML('<img src="deck-pcr.png" height="600">')
   })
   
   output$wetlab <- renderUI({

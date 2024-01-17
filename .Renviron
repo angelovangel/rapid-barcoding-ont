@@ -1,0 +1,2 @@
+OPENTRONS_PATH = '/Users/angeloas/mambaforge/bin'
+LABWARE_PATH = '/Users/angeloas/code/rapid-barcoding-ont/labware'
