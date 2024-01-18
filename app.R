@@ -293,7 +293,8 @@ server <- function(input, output, session) {
       str_replace('source_labware = .*', paste0("source_labware = ", "'", input$sample_labware, "'")) %>%
       str_replace('aspirate_factor = .*', paste0('aspirate_factor = ', round(100/input$aspirate_speed, 2))) %>%
       str_replace('dispense_factor = .*', paste0('dispense_factor = ', round(100/input$dispense_speed, 2))) %>%
-      str_replace('pool_reuse_tip = .*', paste0('pool_reuse_tip = ', if_else(input$reuse_tip, 'True', 'False')))
+      str_replace('pool_reuse_tip = .*', paste0('pool_reuse_tip = ', if_else(input$reuse_tip, 'True', 'False'))) %>%
+      str_replace('lsk = .*', paste0('lsk = ', if_else(input$protocol_type == 'LSK114', 'True', 'False')))
   })
   
   ### Observers
