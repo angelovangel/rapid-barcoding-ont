@@ -44,7 +44,7 @@ example_table$conc = c(120, 80, 35, rep(NA, 93))
 # GUI
 
 accordion1 <- list(
-  selectizeInput('protocol_type', 'Protocol', choices = c('plasmid', 'gDNA'), selected = 'gDNA'),
+  selectizeInput('protocol_type', 'Protocol', choices = c('LSK114/gDNA' = 'LSK114','Rapid/gDNA' = 'gDNA', 'Rapid/plasmid' = 'plasmid'), selected = 'gDNA'),
   uiOutput('sample_amount'),
   downloadButton('download_script', 'Opentrons script', width = '100%', style = 'margin-top:20px'),
   downloadButton('download_samples', 'Sample sheet', width = '100%', style = 'margin-top:20px')
@@ -93,32 +93,36 @@ sidebar <- sidebar(
 # )
 vbs <- list(
   value_box(
-    title = textOutput('vbs00'),
-    value = textOutput('vbs0'),
+    title = 'Protocol',
+    value = textOutput('vbs0')
+  ),
+  value_box(
+    title = textOutput('vbs1a'),
+    value = textOutput('vbs1b'),
     theme = 'secondary'
   ),
   value_box(
     title = 'Rxn volume',
-    value = textOutput('vbs1'),
+    value = textOutput('vbs2'),
     #showcase = bs_icon('dot'),
     theme = 'secondary'
     #a(textOutput('vbs1b'))
   ),
   value_box(
     title = "Total fmoles",
-    value = textOutput('vbs2'),
+    value = textOutput('vbs3'),
     #showcase = bs_icon("three-dots"),
     theme = "secondary"
   ),
   value_box(
     title = "Total ng",
-    value = textOutput('vbs3'),
+    value = textOutput('vbs4'),
     #showcase = bs_icon("chevron-bar-down"),
     theme = "secondary"
   ),
   value_box(
     title = "Total bases",
-    value = textOutput('vbs4'),
+    value = textOutput('vbs5'),
     #showcase = bs_icon("chevron-bar-down"),
     theme = "secondary"
   )
@@ -148,7 +152,7 @@ ui <- page_navbar(
     div(
       layout_column_wrap(
         height = '83px',
-        width = '200px',
+        width = '100px',
         !!!vbs
       )
     ),
@@ -189,14 +193,14 @@ server <- function(input, output, session) {
   Sys.setenv(PATH = paste(old_path, Sys.getenv('OPENTRONS_PATH'), sep = ":"))
   
   ### Protocol
-  protocol_url <- "https://raw.githubusercontent.com/angelovangel/opentrons/main/protocols/02-ont-rapid-pcr.py"
+  protocol_url <- "https://raw.githubusercontent.com/angelovangel/opentrons/main/protocols/02-ont-rapidlsk.py"
   
   if (curl::has_internet()) {
     con <- url(protocol_url)
     protocol_template <- readLines(con, warn = F)
     close(con)
   } else {
-    protocol_template <- readLines('02-ont-rapid-pcr.py', warn = F)
+    protocol_template <- readLines('02-ont-rapidlsk.py', warn = F)
   }
   
   ### Reactives
@@ -213,6 +217,7 @@ server <- function(input, output, session) {
           ul = case_when(
             input$protocol_type == 'plasmid' ~ input$ng_or_fmoles/fmolperul, 
             input$protocol_type == 'gDNA' ~ input$ng_or_fmoles/conc,
+            input$protocol_type == 'LSK114' ~ input$ng_or_fmoles/conc,
             TRUE ~ 0)
         ) %>%
         mutate(
@@ -367,27 +372,32 @@ server <- function(input, output, session) {
   output$sample_amount <- renderUI({
     if(input$protocol_type == 'plasmid') {
       numericInput('ng_or_fmoles', 'fmol per reaction (~ 20)', value = 20, min = 1, max = 200, step = 1)
+    } else if (input$protocol_type == 'LSK114') {
+      numericInput('ng_or_fmoles', 'ng per reaction (400 ng)', value = 400, min = 5, max = 1000, step = 10)
     } else {
       numericInput('ng_or_fmoles', 'ng per reaction (50-100 ng)', value = 50, min = 5, max = 500, step = 10)
     }
   })
   
-  output$vbs00 <- renderText({
-    paste0('Reactions (', protocol$users, ' users)')
-  })
   output$vbs0 <- renderText({
+    paste0(input$protocol_type)
+  })
+  output$vbs1a <- renderText({
+    paste0('Rxns (', protocol$users, ' users)')
+  })
+  output$vbs1b <- renderText({
     paste0(protocol$samples)
   })
-  output$vbs1 <- renderText({
+  output$vbs2 <- renderText({
     paste0(protocol$rxn_vol, ' ul')
   })
-  output$vbs2 <- renderText({
+  output$vbs3 <- renderText({
     paste0(round(protocol$total_fmoles, 0), ' fmol')
   })
-  output$vbs3 <- renderText({
+  output$vbs4 <- renderText({
     paste0(round(protocol$total_ng, 0), ' ng')
   })
-  output$vbs4 <- renderText({
+  output$vbs5 <- renderText({
     paste0(silabel(protocol$total_bases))
   })
   
