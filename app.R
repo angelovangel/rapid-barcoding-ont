@@ -94,7 +94,8 @@ sidebar <- sidebar(
 vbs <- list(
   value_box(
     title = 'Protocol',
-    value = textOutput('vbs0')
+    value = textOutput('vbs0'),
+    theme = 'secondary'
   ),
   value_box(
     title = textOutput('vbs1a'),
@@ -194,8 +195,8 @@ server <- function(input, output, session) {
   
   ### Protocol
   protocol_url <- "https://raw.githubusercontent.com/angelovangel/opentrons/main/protocols/02-ont-rapidlsk.py"
-  
-  if (curl::has_internet()) {
+  if (FALSE) {
+  #if (curl::has_internet()) {
     con <- url(protocol_url)
     protocol_template <- readLines(con, warn = F)
     close(con)
@@ -286,7 +287,6 @@ server <- function(input, output, session) {
       str_replace('volume2=.*', paste0('volume2=[', myvalues()[3], ']')) %>%
       str_replace('sourcewells3=.*', paste0("sourcewells3=['", myvalues()[4], "']")) %>%
       str_replace('volume3=.*', paste0('volume3=[', myvalues()[5], ']')) %>%
-      
       str_replace('barcode_vol = .*', paste0('barcode_vol = ', protocol$bc_vol)) %>%
       str_replace('total_rxn_vol = .*', paste0('total_rxn_vol = ', protocol$rxn_vol)) %>%
       str_replace('consolidate_vol_fraction = .*', paste0('consolidate_vol_fraction = ', input$consolidate_volume_factor)) %>%
@@ -303,23 +303,21 @@ server <- function(input, output, session) {
       protocol$bc_vol <- 0.5
       protocol$sample_vol <- 5 * as.numeric(input$sample_volume_factor)
       protocol$rxn_vol <- protocol$bc_vol + protocol$sample_vol
-      protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
-      protocol$total_ng <- sum(hot()$ng, na.rm = T)
-      protocol$total_bases <- sum(hot()$dna_size, na.rm = T)
-      protocol$samples <- 96 - str_count( myvalues()[1], ' ' )
-      protocol$users <- length(unique(hot()$user)) - 1
-      
-    } else {
+    } else if (input$protocol_type == 'gDNA') {
       protocol$bc_vol <- 1
       protocol$sample_vol <- 10 * as.numeric(input$sample_volume_factor)
       protocol$rxn_vol <- protocol$bc_vol + protocol$sample_vol
-      protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
-      protocol$total_ng <- sum(hot()$ng, na.rm = T)
-      protocol$total_bases <- sum(hot()$dna_size, na.rm = T)
-      protocol$samples <- length(hot()$sample)
-      protocol$samples <- 96 - str_count( myvalues()[1], ' ' )
-      protocol$users <- length(unique(hot()$user)) - 1
+    } else if (input$protocol_type == 'LSK114') {
+      protocol$bc_vol <- 1.25
+      protocol$sample_vol <- 12 * as.numeric(input$sample_volume_factor)
+      protocol$rxn_vol <- protocol$sample_vol * as.numeric(input$sample_volume_factor) + 3
     }
+    protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
+    protocol$total_ng <- sum(hot()$ng, na.rm = T)
+    protocol$total_bases <- sum(hot()$dna_size, na.rm = T)
+    protocol$samples <- length(hot()$sample)
+    protocol$samples <- 96 - str_count( myvalues()[1], ' ' )
+    protocol$users <- length(unique(hot()$user)) - 1
   })
   
   # 
@@ -390,13 +388,13 @@ server <- function(input, output, session) {
     paste0(protocol$samples)
   })
   output$vbs2 <- renderText({
-    paste0(protocol$rxn_vol, ' ul')
+    paste0(protocol$rxn_vol)
   })
   output$vbs3 <- renderText({
-    paste0(round(protocol$total_fmoles, 0), ' fmol')
+    paste0(round(protocol$total_fmoles, 0))
   })
   output$vbs4 <- renderText({
-    paste0(round(protocol$total_ng, 0), ' ng')
+    paste0(round(protocol$total_ng, 0))
   })
   output$vbs5 <- renderText({
     paste0(silabel(protocol$total_bases))
@@ -406,18 +404,12 @@ server <- function(input, output, session) {
     if (input$protocol_type == 'plasmid') {
       # no other clever way of passing arguments to the JS function, so using paste0
       maxvolume <- 5 * as.numeric(input$sample_volume_factor) 
-      paste0(
-        "function(instance, td, row, col, prop, value, cellProperties) {
-      Handsontable.renderers.NumericRenderer.apply(this, arguments);
-      
-      if (value >=", maxvolume," || value <= 0.5) {
-      td.style.color = 'red'
-      }
-    }
-    "
-      )
+    
+    } else if (input$protocol_type == 'LSK114') {
+      maxvolume <- 12 * as.numeric(input$sample_volume_factor) 
     } else {
       maxvolume <- 10 * as.numeric(input$sample_volume_factor) 
+    }
       paste0(
         "function(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.NumericRenderer.apply(this, arguments);
@@ -428,7 +420,6 @@ server <- function(input, output, session) {
     }
     "
       )
-    }
   }
   rendergrey <- function() {
     "
