@@ -310,7 +310,7 @@ server <- function(input, output, session) {
     } else if (input$protocol_type == 'LSK114') {
       protocol$bc_vol <- 1.25
       protocol$sample_vol <- 12 * as.numeric(input$sample_volume_factor)
-      protocol$rxn_vol <- protocol$sample_vol * as.numeric(input$sample_volume_factor) + 3
+      protocol$rxn_vol <- protocol$sample_vol + (3 * as.numeric(input$sample_volume_factor))
     }
     protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
     protocol$total_ng <- sum(hot()$ng, na.rm = T)
@@ -494,7 +494,12 @@ server <- function(input, output, session) {
   })
   
   output$deck <- renderUI({
-    HTML('<img src="deck-pcr.png" height="600">')
+    if (input$protocol_type == 'LSK114') {
+      HTML('<img src="deck2.png" height="600">')
+    } else {
+      HTML('<img src="deck1.png" height="600">')
+    }
+    
   })
   
   output$wetlab <- renderUI({

@@ -30,7 +30,7 @@ source_labware = 'stack_plate_biorad96well'
 aspirate_factor = 1
 dispense_factor = 1
 pool_reuse_tip = True #for the consolidate step only, but switch to transfer if tip change is needed (consolidate does not change tips)
-lsk = False # decide if LSK114 protocol is run or just rapid. Fork at the necessary points if True
+lsk = True # decide if LSK114 protocol is run or just rapid. Fork at the necessary points if True
 barcode_vol = 1
 total_rxn_vol = 11
 # Variables replaced by the Shiny app
@@ -112,6 +112,22 @@ def run(ctx: protocol_api.ProtocolContext):
     ctx.comment('Using m20 aspirate flow rate of ' + str(m20.flow_rate.aspirate) + ' ul/s')
     ctx.comment('Using m20 dispense flow rate of ' + str(m20.flow_rate.dispense) + ' ul/s')
     ctx.comment('----------------------------------------------------------------')
+
+    # labels for liquids
+    waterlabel = ctx.define_liquid('water', 'Water used to normalize DNA', display_color = '#e41a1c')
+    poollabel = ctx.define_liquid('pool', 'Empty tube for final pool', display_color = '#377eb8')
+    #bclabel = ctx.define_liquid('barcodes', 'Barcoding plate', display_color = '#99A3A4')
+    tube_block[watersource].load_liquid(liquid = waterlabel, volume = sum(volume1, 100))
+    tube_block[finaltube].load_liquid(liquid = poollabel, volume = 0)
+    # for i in barcodeplate.wells():
+    #     i.load_liquid(liquid = bclabel, volume = 1)
+    if lsk:
+        ermmlabel = ctx.define_liquid('ER MM', 'End repair msster mix', display_color = '#4daf4a')
+        ligmmlabel = ctx.define_liquid('Lig MM', 'Ligation master mix', display_color = '#984ea3')
+        edtalabel = ctx.define_liquid('EDTA', 'EDTA', display_color = '#ff7f00')
+        tube_block[ermm].load_liquid( liquid = ermmlabel, volume = sum(1 for x in volume1 if x > 0) * 3.3 )
+        tube_block[ligmm].load_liquid(liquid = ligmmlabel, volume = sum(1 for x in volume1 if x > 0) * 5.5)
+        tube_block[edta].load_liquid(liquid = edtalabel, volume = sum(1 for x in volume1 if x > 0) * 2.2)
 
     # setup ODTC
     odtc.open_lid()
