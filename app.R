@@ -308,9 +308,11 @@ server <- function(input, output, session) {
       protocol$sample_vol <- 10 * as.numeric(input$sample_volume_factor)
       protocol$rxn_vol <- protocol$bc_vol + protocol$sample_vol
     } else if (input$protocol_type == 'LSK114') {
+      #updateNumericInput(session = session, 'aspirate_speed', value = 50)
+      #updateNumericInput(session = session, 'dispense_speed', value = 50)
       protocol$bc_vol <- 1.25
       protocol$sample_vol <- 12 * as.numeric(input$sample_volume_factor)
-      protocol$rxn_vol <- protocol$sample_vol + (3 * as.numeric(input$sample_volume_factor))
+      protocol$rxn_vol <- 10
     }
     protocol$total_fmoles <- sum(hot()$fmoles, na.rm = T)
     protocol$total_ng <- sum(hot()$ng, na.rm = T)
