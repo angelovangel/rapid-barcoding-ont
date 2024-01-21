@@ -736,18 +736,6 @@
         "shiny"
       ]
     },
-    "shinydashboard": {
-      "Package": "shinydashboard",
-      "Version": "0.7.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "e418b532e9bb4eb22a714b9a9f1acee7",
-      "Requirements": [
-        "htmltools",
-        "promises",
-        "shiny"
-      ]
-    },
     "shinyjs": {
       "Package": "shinyjs",
       "Version": "2.1.0",
@@ -890,18 +878,6 @@
       "Repository": "CRAN",
       "Hash": "62f4b5da3e08d8e5bcba6cac15603f70",
       "Requirements": []
-    },
-    "waiter": {
-      "Package": "waiter",
-      "Version": "0.2.5",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "93e6b6c8ae3f81d4be77a0dc74e5cf5e",
-      "Requirements": [
-        "R6",
-        "htmltools",
-        "shiny"
-      ]
     },
     "webshot": {
       "Package": "webshot",
