@@ -390,7 +390,12 @@ server <- function(input, output, session) {
     paste0(protocol$samples)
   })
   output$vbs2 <- renderText({
-    paste0(protocol$rxn_vol)
+    if (input$protocol_type == 'LSK114') {
+      paste0('15/',protocol$rxn_vol)
+    } else {
+      paste0(protocol$rxn_vol)
+    }
+    
   })
   output$vbs3 <- renderText({
     paste0(round(protocol$total_fmoles, 0))
