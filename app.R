@@ -51,7 +51,7 @@ accordion1 <- list(
 )
 accordion2 <- list(
   checkboxInput('pause_before_inc', 'Pause before incubation (cover plate)', value = T),
-  checkboxInput('reuse_tip', 'Reuse tip in pooling', value = F),
+  checkboxInput('reuse_tip', 'Reuse tip in pooling', value = T),
   selectizeInput(
     'sample_labware', 'Samples labware', 
     choices = c('Stacked strips/plate' = 'stack_plate_biorad96well', 'Biorad plate' = 'biorad_96_wellplate_200ul_pcr'), 
@@ -319,8 +319,8 @@ server <- function(input, output, session) {
       protocol$sample_vol <- 10 * as.numeric(input$sample_volume_factor)
       protocol$rxn_vol <- protocol$bc_vol + protocol$sample_vol
     } else if (input$protocol_type == 'LSK114') {
-      #updateNumericInput(session = session, 'aspirate_speed', value = 50)
-      #updateNumericInput(session = session, 'dispense_speed', value = 50)
+      updateNumericInput(session = session, 'aspirate_speed', value = 60)
+      updateNumericInput(session = session, 'dispense_speed', value = 50)
       protocol$bc_vol <- 1.25
       protocol$sample_vol <- 12 * as.numeric(input$sample_volume_factor)
       protocol$rxn_vol <- 10
