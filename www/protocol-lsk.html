@@ -11,7 +11,7 @@
 
 
 
-<title>ONT rapid plasmid/bacterial genome sequencing</title>
+<title>ONT Native Barcoding 96 V14</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -572,20 +572,19 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">ONT rapid plasmid/bacterial genome
-sequencing</h1>
+<h1 class="title toc-ignore">ONT Native Barcoding 96 V14</h1>
 
 </div>
 
 
-<p>This protocol is for Oxford Nanopore sequencing of plasmid or
-bacterial genome samples using the rapid barcoding kit
-(SQK-RBK114.96).</p>
+<p>This protocol is for Oxford Nanopore sequencing using ligation with
+the SQK-NBD114.96 kit (revO 15Sep2022).</p>
 <hr />
-<p><strong>1. Tagmentation</strong></p>
+<p><strong>1. DNA repair and end-prep (Opentrons)</strong></p>
 <ul>
-<li>adjust DNA with water, add barcodes (Opentrons). For gDNA, use 50
-ng/sample if &gt; 4 samples and 200 ng/sample if &lt; 4 samples.</li>
+<li>In a 96-well plate, add 400 ng DNA per sample</li>
+<li>Make up to 12 ul with water</li>
+<li>Prepare ER master mix:</li>
 </ul>
 <table class="table table-hover" style="width: auto !important; ">
 <thead>
@@ -594,85 +593,56 @@ ng/sample if &gt; 4 samples and 200 ng/sample if &lt; 4 samples.</li>
 .
 </th>
 <th style="text-align:left;color: #fff; !important;background-color: #999999; !important;">
-gDNA
-</th>
-<th style="text-align:left;color: #fff; !important;background-color: #999999; !important;">
-plasmid
+vol
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align:left;">
-DNA + water
+NEBNext FFPE DNA Repair Buffer
 </td>
 <td style="text-align:left;">
-10.0 ul
-</td>
-<td style="text-align:left;">
-5.0 ul
+0.875 ul
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-rapid barcode
+Ultra II End-prep Reaction Buffer
 </td>
 <td style="text-align:left;">
-1.0 ul
+0.875 ul
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ultra II End-prep Enzyme Mix
+</td>
+<td style="text-align:left;">
+0.75 ul
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NEBNext FFPE DNA Repair Mix
 </td>
 <td style="text-align:left;">
 0.5 ul
 </td>
 </tr>
-<tr>
-<td style="text-align:left;font-weight: bold;">
-total
-</td>
-<td style="text-align:left;font-weight: bold;">
-11 ul
-</td>
-<td style="text-align:left;font-weight: bold;">
-5.5 ul
-</td>
-</tr>
 </tbody>
 </table>
 <ul>
-<li>incubate 30 degrees for 2 minutes</li>
-<li>incubate 80 degress for 2 minutes</li>
+<li>Add 3 ul ER master mix to each sample, mix thoroughly</li>
+<li>incubate 20 degrees for 5 minutes</li>
+<li>incubate 65 degrees for 5 minutes</li>
 </ul>
 <hr />
-<p><strong>2. Pool and purify</strong></p>
+<p><strong>2. Native barcode ligation and pooling
+(Opentrons)</strong></p>
 <ul>
-<li>pool all samples (Opentrons), note down volume<br />
-</li>
-<li>add 0.5x AMPure XP beads (AXP), incubate on a Hula mixer 5 min room
-temperature<br />
-</li>
-<li>wash beads 2x with 80% EtOH<br />
-</li>
-<li>aspirate all EtOH and dry beads 30 seconds<br />
-</li>
-<li>resuspend in 15 ul EB, incubate 10 minutes, take out eluate in new
-tube</li>
-</ul>
-<hr />
-<p><strong>3. RAP addition</strong></p>
-<ul>
-<li>measure pool conc with Qbit<br />
-</li>
-<li>dilute adapter - 1.5 ul rapid adapter (RA) + 3.5 ul adapter dilution
-buffer (ADB)</li>
-<li>add 1 ul diluted adaptor to the barcoded DNA</li>
-<li>incubate 5 min RT</li>
-<li>put on ice</li>
-</ul>
-<hr />
-<p><strong>4. Load flow cell - use max 20 fmol for R10.4.1</strong></p>
-<ul>
-<li>prime flow cell - 30 ul FCT + 5 ul BSA at 50 mg/ul to one vial (1170
-ul) of FCF (MinION)</li>
-<li>library mix</li>
+<li>Thaw reagents at RT</li>
+<li>In a <strong>new</strong> 96-well plate, add the following:</li>
 </ul>
 <table class="table table-hover" style="width: auto !important; ">
 <thead>
@@ -680,70 +650,55 @@ ul) of FCF (MinION)</li>
 <th style="text-align:left;color: #fff; !important;background-color: #999999; !important;">
 .
 </th>
-<th style="text-align:right;color: #fff; !important;background-color: #999999; !important;">
-Flongle
-</th>
-<th style="text-align:right;color: #fff; !important;background-color: #999999; !important;">
-MinION
+<th style="text-align:left;color: #fff; !important;background-color: #999999; !important;">
+vol
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align:left;">
-Sequencing buffer (SB)
+water
 </td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-37.5
+<td style="text-align:left;">
+3 ul
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Library beads (LIB)
+End-prepped DNA
 </td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-25.5
+<td style="text-align:left;">
+0.75 ul
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Library
+Native Barcode (NB0-96)
 </td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-12.0
+<td style="text-align:left;">
+1.25 ul
 </td>
 </tr>
 <tr>
-<td style="text-align:left;font-weight: bold;">
-Total
+<td style="text-align:left;">
+Blunt/TA Ligase Master Mix
 </td>
-<td style="text-align:right;font-weight: bold;">
-30
-</td>
-<td style="text-align:right;font-weight: bold;">
-75.0
+<td style="text-align:left;">
+5 ul
 </td>
 </tr>
 </tbody>
 </table>
-<p>Load 2 or more times if needed and enough library is present</p>
+<ul>
+<li>Mix thoroughly</li>
+<li>Incubate 20 min RT</li>
+<li>Add 2 ul EDTA</li>
+<li>Pool the barcoded samples in a clean tube</li>
+</ul>
 <hr />
-<p><strong>5. Data analysis</strong></p>
-<p>Use high accuracy basecallig and demultiplexing in MinKNOW.
-Recommended pipelines:<br />
-<a href="https://github.com/epi2me-labs/wf-clone-validation" target="_blank">plasmid
-de novo assembly pipeline</a><br />
-<a href="https://github.com/epi2me-labs/wf-bacterial-genomes" target="_blank">bacterial
-genomes pipeline</a></p>
+<p><strong>3. Continue protocol with pool (manual
+pipetting)</strong></p>
 
 
 

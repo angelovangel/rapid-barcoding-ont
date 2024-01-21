@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = FALSE)
 
 This protocol is for Oxford Nanopore sequencing of plasmid or bacterial genome samples using the rapid barcoding kit (SQK-RBK114.96).  
 
+***
+
 **1. Tagmentation**  
 
  - adjust DNA with water, add barcodes (Opentrons). For gDNA, use 50 ng/sample if > 4 samples and 200 ng/sample if < 4 samples.

@@ -1,0 +1,70 @@
+---
+title: "ONT Native Barcoding 96 V14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(kableExtra)
+
+knitr::opts_chunk$set(echo = FALSE)
+
+```
+
+
+This protocol is for Oxford Nanopore sequencing using ligation with the SQK-NBD114.96 kit (revO 15Sep2022).  
+
+***
+
+**1. DNA repair and end-prep (Opentrons)**  
+
+ - In a 96-well plate, add 400 ng DNA per sample
+ - Make up to 12 ul with water
+ - Prepare ER master mix:
+ 
+```{r table1, results='asis'} 
+
+kbl(
+  data.frame(
+    . = c('NEBNext FFPE DNA Repair Buffer', 'Ultra II End-prep Reaction Buffer', 'Ultra II End-prep Enzyme Mix', 'NEBNext FFPE DNA Repair Mix'),
+    vol = c('0.875 ul', '0.875 ul', '0.75 ul', '0.5 ul')
+  )
+) %>%
+  kable_styling(position = 'left', full_width = F, bootstrap_options = 'hover', 'condensed') %>%
+  row_spec(0, bold = F, background = '#999999;', color =  '#fff;')
+```
+
+ - Add 3 ul ER master mix to each sample, mix thoroughly
+ - incubate 20 degrees for 5 minutes
+ - incubate 65 degrees for 5 minutes
+
+*** 
+ 
+**2. Native barcode ligation and pooling (Opentrons)**  
+
+ - Thaw reagents at RT
+ - In a **new** 96-well plate, add the following:
+ 
+```{r table2, results='asis'} 
+
+kbl(
+  data.frame(
+    . = c('water', 'End-prepped DNA', 'Native Barcode (NB0-96)', 'Blunt/TA Ligase Master Mix'),
+    vol = c('3 ul', '0.75 ul', '1.25 ul', '5 ul')
+  )
+) %>%
+  kable_styling(position = 'left', full_width = F, bootstrap_options = 'hover', 'condensed') %>%
+  row_spec(0, bold = F, background = '#999999;', color =  '#fff;')
+```
+ 
+ - Mix thoroughly
+ - Incubate 20 min RT
+ - Add 2 ul EDTA
+ - Pool the barcoded samples in a clean tube
+ 
+***
+
+**3. Continue protocol with pool (manual pipetting)**
+
+
+

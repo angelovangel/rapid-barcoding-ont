@@ -297,6 +297,17 @@ server <- function(input, output, session) {
       str_replace('lsk = .*', paste0('lsk = ', if_else(input$protocol_type == 'LSK114', 'True', 'False')))
   })
   
+  # For LSK, calculate dynamic table for the End prep MM
+  endrepmm <- reactive({
+    xmm <- paste0(protocol$samples, 'x MM')
+    ermm <- data.frame(
+      comp = c("NEBNext FFPE DNA Repair Buffer", "Ultra II End-prep Reaction Buffer", "Ultra II End-prep Enzyme Mix", "NEBNext FFPE DNA Repair Mix"),
+      vol = c (0.875, 0.875, 0.75, 0.5)) %>%
+      mutate(temp = protocol$samples * vol * 1.1)
+    colnames(ermm) <- c('Component', '1x volume', xmm)
+    ermm
+  })
+  
   ### Observers
   observe({
     if(input$protocol_type == 'plasmid') {
@@ -510,7 +521,26 @@ server <- function(input, output, session) {
   })
   
   output$wetlab <- renderUI({
-    tags$iframe(src= "protocol.html", width = 800, height = 800)
+    if (input$protocol_type == 'LSK114') {
+      layout_column_wrap(
+        width = 1/2,
+        tags$div(
+          tags$b('ONT Native Barcoding 96 V14'),
+          tags$p(paste0('Prepare End-prep master mix and place in A2 of Alu block. For ', protocol$samples, ' samples (including 10% overhead):')),
+          rhandsontable(endrepmm(), rowHeaders = NULL, stretchH = 'all', width = 400) %>%
+            hot_col('1x volume', format = "0.000"),
+          #tags$br(),
+          tags$a(
+            paste0('For ', protocol$samples, 
+                   ' samples, add ', round(protocol$samples * 5.5, 2), ' ul Blunt/TA Ligase master mix in B2 and ', 
+                   round(protocol$samples * 2.2, 2), ' ul EDTA in C2')
+            )
+        )
+      )
+      #tags$iframe(src= "protocol-lsk.html", width = 800, height = 800)
+    } else {
+      tags$iframe(src= "protocol.html", width = 800, height = 800)
+    }
   })
   
   output$protocol_preview <- renderPrint({
