@@ -526,7 +526,8 @@ server <- function(input, output, session) {
         width = 1/2,
         tags$div(
           tags$b('ONT Native Barcoding 96 V14'),
-          tags$p(paste0('Prepare End-prep master mix and place in A2 of Alu block. For ', protocol$samples, ' samples (including 10% overhead):')),
+          tags$p(paste0('Prepare End-prep master mix and place in A2 of Alu block.')),
+          tags$a(paste0('For ', protocol$samples, ' samples (including 10% overhead):')),
           rhandsontable(endrepmm(), rowHeaders = NULL, stretchH = 'all', width = 400) %>%
             hot_col('1x volume', format = "0.000"),
           #tags$br(),
