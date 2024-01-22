@@ -300,12 +300,34 @@ server <- function(input, output, session) {
   # For LSK, calculate dynamic table for the End prep MM
   endrepmm <- reactive({
     xmm <- paste0(protocol$samples, 'x MM')
-    ermm <- data.frame(
+    df <- data.frame(
       comp = c("NEBNext FFPE DNA Repair Buffer", "Ultra II End-prep Reaction Buffer", "Ultra II End-prep Enzyme Mix", "NEBNext FFPE DNA Repair Mix"),
       vol = c (0.875, 0.875, 0.75, 0.5)) %>%
       mutate(temp = protocol$samples * vol * 1.1)
-    colnames(ermm) <- c('Component', '1x volume', xmm)
-    ermm
+    colnames(df) <- c('Component', '1x volume', xmm)
+    df
+  })
+  
+  ligationmm <- reactive({
+    xmm <- paste0(protocol$samples, 'x MM')
+    df <- data.frame(
+      comp = 'Blunt/TA Ligase master mix',
+      vol = 5
+    ) %>%
+      mutate(temp = protocol$samples * vol * 1.1)
+    colnames(df) <- c('Component', '1x volume', xmm)
+    df
+  })
+  
+  edtamm <- reactive({
+    xmm <- paste0(protocol$samples, 'x MM')
+    df <- data.frame(
+      comp = 'EDTA blue cap',
+      vol = 2
+    ) %>%
+      mutate(temp = protocol$samples * vol * 1.1)
+    colnames(df) <- c('Component', '1x volume', xmm)
+    df
   })
   
   ### Observers
@@ -526,16 +548,24 @@ server <- function(input, output, session) {
         width = 1/2,
         tags$div(
           tags$b('ONT Native Barcoding 96 V14'),
-          tags$p(paste0('Prepare End-prep master mix and place in A2 of Alu block.')),
-          tags$a(paste0('For ', protocol$samples, ' samples (including 10% overhead):')),
-          rhandsontable(endrepmm(), rowHeaders = NULL, stretchH = 'all', width = 400) %>%
+          tags$hr(),
+          tags$div('Prepare End-prep master mix and place in well ', tags$b('A2'), ' of Alu block.'),
+          tags$div(paste0('For ', protocol$samples, ' samples (including 10% overhead):')),
+          rhandsontable(endrepmm(), rowHeaders = NULL, stretchH = 'all', height = 150) %>%
+            hot_cols(colWidths = c(200, 50, 50)) %>%
             hot_col('1x volume', format = "0.000"),
-          #tags$br(),
-          tags$a(
-            paste0('For ', protocol$samples, 
-                   ' samples, add ', round(protocol$samples * 5.5, 2), ' ul Blunt/TA Ligase master mix in B2 and ', 
-                   round(protocol$samples * 2.2, 2), ' ul EDTA in C2')
-            )
+          tags$hr(),
+          tags$div('Place Blunt/TA Ligase master mix in well ',tags$b('B2'), ' of Alu block'),
+          tags$div(paste0('For ', protocol$samples, ' samples (including 10% overhead):')),
+          rhandsontable(ligationmm(), rowHeaders = NULL, stretchH = 'all', height = 100) %>%
+            hot_cols(colWidths = c(200, 50, 50)) %>%
+            hot_col('1x volume', format = "0.000"),
+          tags$hr(),
+          tags$div('Place EDTA in well ', tags$b('C2'), ' of Alu block'),
+          tags$div(paste0('For ', protocol$samples, ' samples (including 10% overhead):')),
+          rhandsontable(edtamm(), rowHeaders = NULL, stretchH = 'all', height = 100) %>%
+            hot_cols(colWidths = c(200, 50, 50)) %>%
+            hot_col('1x volume', format = "0.000")
         )
       )
       #tags$iframe(src= "protocol-lsk.html", width = 800, height = 800)
