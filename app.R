@@ -484,7 +484,7 @@ server <- function(input, output, session) {
     rhandsontable(
       hot() %>% select(-c('bc_count', 'mycolor', 'fmolperul')),
       #svol = 9,
-      rowHeaders = NULL) %>%
+      rowHeaders = NULL, overflow = 'scroll', height = 800) %>%
     hot_col('well', readOnly = T, renderer = rendergrey() ) %>%
     hot_col('barcode', type = 'dropdown') %>%
     hot_col('ng', readOnly = T, type = 'numeric', format = '0.0') %>%
@@ -552,19 +552,19 @@ server <- function(input, output, session) {
           tags$div('Prepare End-prep master mix and place in well ', tags$b('A2'), ' of Alu block.'),
           tags$div(paste0('For ', protocol$samples, ' samples (including 10% overhead):')),
           rhandsontable(endrepmm(), rowHeaders = NULL, stretchH = 'all', height = 150) %>%
-            hot_cols(colWidths = c(200, 50, 50)) %>%
+            hot_cols(colWidths = c(150, 50, 50)) %>%
             hot_col('1x volume', format = "0.000"),
           tags$hr(),
           tags$div('Place Blunt/TA Ligase master mix in well ',tags$b('B2'), ' of Alu block'),
           tags$div(paste0('For ', protocol$samples, ' samples (including 10% overhead):')),
           rhandsontable(ligationmm(), rowHeaders = NULL, stretchH = 'all', height = 100) %>%
-            hot_cols(colWidths = c(200, 50, 50)) %>%
+            hot_cols(colWidths = c(150, 50, 50)) %>%
             hot_col('1x volume', format = "0.000"),
           tags$hr(),
           tags$div('Place EDTA in well ', tags$b('C2'), ' of Alu block'),
           tags$div(paste0('For ', protocol$samples, ' samples (including 10% overhead):')),
           rhandsontable(edtamm(), rowHeaders = NULL, stretchH = 'all', height = 100) %>%
-            hot_cols(colWidths = c(200, 50, 50)) %>%
+            hot_cols(colWidths = c(150, 50, 50)) %>%
             hot_col('1x volume', format = "0.000")
         )
       )
