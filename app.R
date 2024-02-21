@@ -337,7 +337,7 @@ server <- function(input, output, session) {
       protocol$sample_vol <- 5 * as.numeric(input$sample_volume_factor)
       protocol$rxn_vol <- protocol$bc_vol + protocol$sample_vol
     } else if (input$protocol_type == 'gDNA') {
-      protocol$bc_vol <- 1
+      protocol$bc_vol <- 1.5
       protocol$sample_vol <- 10 * as.numeric(input$sample_volume_factor)
       protocol$rxn_vol <- protocol$bc_vol + protocol$sample_vol
     } else if (input$protocol_type == 'LSK114') {
@@ -409,7 +409,7 @@ server <- function(input, output, session) {
     } else if (input$protocol_type == 'LSK114') {
       numericInput('ng_or_fmoles', 'ng per reaction (400 ng)', value = 400, min = 5, max = 1000, step = 10)
     } else {
-      numericInput('ng_or_fmoles', 'ng per reaction (50-100 ng)', value = 50, min = 5, max = 500, step = 10)
+      numericInput('ng_or_fmoles', 'ng per reaction (200 ng)', value = 200, min = 5, max = 1000, step = 10)
     }
   })
   

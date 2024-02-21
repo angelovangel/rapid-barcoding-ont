@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 
-This protocol is for Oxford Nanopore sequencing of plasmid or bacterial genome samples using the rapid barcoding kit (SQK-RBK114.96).  
+This protocol is for Oxford Nanopore sequencing of plasmid or bacterial genome samples using the rapid barcoding kit (SQK-RBK114.96, update 21 Feb 2024).  
 
 ***
 
@@ -26,7 +26,7 @@ This protocol is for Oxford Nanopore sequencing of plasmid or bacterial genome s
 kbl(
   data.frame(
     . = c('DNA + water', 'rapid barcode', 'total'),
-    gDNA = c('10.0 ul', '1.0 ul', '11 ul'),
+    gDNA = c('10.0 ul', '1.5 ul', '11.5 ul'),
     plasmid = c('5.0 ul', '0.5 ul', '5.5 ul')
   )
 ) %>%
@@ -47,7 +47,7 @@ kbl(
  - add 0.5x AMPure XP beads (AXP), incubate on a Hula mixer 5 min room temperature  
  - wash beads 2x with 80% EtOH  
  - aspirate all EtOH and dry beads 30 seconds  
- - resuspend in 15 ul EB, incubate 10 minutes, take out eluate in new tube
+ - resuspend in 15 ul EB (15 µl per set of 24 sample reached, e.g. elute in 60 µl for 96 barcodes), incubate 10 minutes, take out eluate in new tube
  
 ***
 
