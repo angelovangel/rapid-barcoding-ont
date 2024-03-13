@@ -54,7 +54,8 @@ accordion2 <- list(
   checkboxInput('reuse_tip', 'Reuse tip in pooling', value = T),
   selectizeInput(
     'sample_labware', 'Samples labware', 
-    choices = c('Stacked strips/plate' = 'stack_plate_biorad96well', 'Biorad plate' = 'biorad_96_wellplate_200ul_pcr'), 
+    choices = c('Stacked strips/plate' = 'stack_plate_biorad96well', 'Biorad plate' = 'biorad_96_wellplate_200ul_pcr'),
+    selected = 'biorad_96_wellplate_200ul_pcr',
     multiple = F
     ),
   selectizeInput('sample_volume_factor', 
